@@ -27,7 +27,28 @@ $('#password-form').onsubmit=async e=>{e.preventDefault();const f=new FormData(e
 loadTests();
 
 const extractButton = document.querySelector('#extract-questions');
+async function autoFillQuestions(questions) {
+  if (!Array.isArray(questions) || !questions.length) {
+    alert('कोई MCQ नहीं मिला। पेपर का फॉर्मेट जाँचें।');
+    return;
+  }
 
+  $('#questions').innerHTML = '';
+
+  questions.forEach(q => {
+    addQuestion();
+
+    const el = $$('.question-editor').at(-1);
+    el.querySelector('[data-k="prompt"]').value = q.prompt || '';
+    ['a', 'b', 'c', 'd'].forEach(k => {
+      el.querySelector(`[data-k="${k}"]`).value = q[k] || '';
+    });
+    el.querySelector('[data-k="answer"]').value =
+      String(Number.isInteger(q.answer) ? q.answer : 0);
+    el.querySelector('[data-k="explanation"]').value =
+      q.explanation || '';
+  });
+}
 if (extractButton) {
   extractButton.onclick = async () => {
     const fileInput = document.querySelector('#question-file');
