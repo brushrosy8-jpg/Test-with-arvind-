@@ -15,6 +15,11 @@
   <h3>📄 PDF / फोटो से प्रश्न निकालें</h3>
   <p>PDF या प्रश्नों की फोटो चुनें।</p>
   <input type="file" id="question-file" accept=".pdf,image/*">
+  <label for="answer-key-file">Answer Key अपलोड करें</label>
+<input type="file" id="answer-key-file" accept=".pdf,image/*">
+<button type="button" class="secondary" id="auto-create-questions">पेपर + Answer Key से प्रश्न बनाएँ</button>
+
+<p id="auto-create-msg"></p>
   <button type="button" class="secondary" id="extract-questions">प्रश्न पढ़ें</button>
   <p id="extract-msg"></p>
 </div>
