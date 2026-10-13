@@ -31,6 +31,7 @@ app.use(session({
   resave: false, saveUninitialized: false,
   cookie: { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 8*60*60*1000 }
 }));
+app.use(express.static(__dirname));
 app.use(express.static(path.join(__dirname, 'public')));
 
 function adminOnly(req,res,next) {
