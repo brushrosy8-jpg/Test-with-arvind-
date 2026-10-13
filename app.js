@@ -60,32 +60,52 @@ $('#back-home').onclick = () => {
   loadTests();
 };
 
+
 async function loadTests() {
   const box = $('#test-list');
 
   try {
-    const tests = await api('/api/tests');
+    const [tests, htmlTests] = await Promise.all([
+      api('/api/tests'),
+      api('/api/html-tests').catch(() => [])
+    ]);
 
-    box.innerHTML = tests.length
-      ? tests.map(t => `
-        <article class="testcard">
-          <h3>${esc(t.title)}</h3>
-          <div class="meta">
-            ${esc(t.subject || 'सामान्य टेस्ट')} ·
-            ${t.question_count} प्रश्न ·
-            ${t.duration} मिनट ·
-            प्रति सही ${t.marks} अंक
-          </div>
-          <button class="primary" onclick="startTest(${t.id})">
-            टेस्ट शुरू करें
-          </button>
-        </article>
-      `).join('')
-      : '<div class="empty">अभी कोई टेस्ट प्रकाशित नहीं है।</div>';
+    const databaseCards = tests.map(t => `
+      <article class="testcard">
+        <h3>${esc(t.title)}</h3>
+        <div class="meta">
+          ${esc(t.subject || 'सामान्य टेस्ट')} ·
+          ${t.question_count} प्रश्न ·
+          ${t.duration} मिनट ·
+          प्रति सही ${t.marks} अंक
+        </div>
+        <button class="primary" onclick="startTest(${t.id})">
+          टेस्ट शुरू करें
+        </button>
+      </article>
+    `);
+
+    const htmlCards = htmlTests.map(t => `
+      <article class="testcard">
+        <h3>${esc(t.title)}</h3>
+        <div class="meta">अलग HTML टेस्ट</div>
+        <a class="primary" href="${esc(t.url)}">
+          टेस्ट शुरू करें
+        </a>
+      </article>
+    `);
+
+    const cards = [...databaseCards, ...htmlCards];
+
+    box.innerHTML = cards.length
+      ? cards.join('')
+      : '<div class="empty">अभी कोई टेस्ट उपलब्ध नहीं है।</div>';
+
   } catch (e) {
     box.innerHTML = `<div class="empty">${esc(e.message)}</div>`;
   }
 }
+
 
 async function startTest(id) {
   try {
