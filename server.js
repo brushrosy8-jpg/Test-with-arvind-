@@ -187,6 +187,72 @@ app.post('/api/admin/change-password', adminOnly, (req,res) => {
   db.prepare('UPDATE admins SET password_hash=? WHERE id=?').run(bcrypt.hashSync(String(newPassword),12),row.id);
   res.json({ok:true});
 });
+app.post(
+  '/api/admin/parse-mcq-text',
+  adminOnly,
+  express.text({ type: '*/*', limit: '1mb' }),
+  (req, res) => {
+    try {
+      const text = String(req.body || '').slice(0, 30000);
 
+      if (!text.trim()) {
+        return res.status(400).json({
+          error: 'पेपर का टेक्स्ट खाली है।'
+        });
+      }
+
+      const blocks = text
+        .replace(/\r/g, '')
+        .split(/\n(?=\s*(?:प्रश्न\s*)?\d+\s*[.)।:])/)
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      const questions = [];
+
+      for (const block of blocks) {
+        const lines = block
+          .split('\n')
+          .map(s => s.trim())
+          .filter(Boolean);
+
+        const prompt = lines[0]
+          .replace(/^(?:प्रश्न\s*)?\d+\s*[.)।:]\s*/, '');
+
+        const opts = {};
+
+        for (const line of lines.slice(1)) {
+          const match = line.match(
+            /^\s*([A-Da-d])\s*[).:]\s*(.+)$/
+          );
+
+          if (match) {
+            opts[match[1].toLowerCase()] = match[2].trim();
+          }
+        }
+
+        if (
+          prompt &&
+          opts.a && opts.b && opts.c && opts.d
+        ) {
+          questions.push({
+            prompt,
+            a: opts.a,
+            b: opts.b,
+            c: opts.c,
+            d: opts.d,
+            answer: 0,
+            explanation: ''
+          });
+        }
+      }
+
+      res.json({ ok: true, questions });
+    } catch (err) {
+      res.status(500).json({
+        error: 'प्रश्न पढ़ने में समस्या हुई।'
+      });
+    }
+  }
+);
 const port = Number(process.env.PORT)||3000;
 app.listen(port, ()=>console.log(`Exam Saathi running on port ${port}`));
