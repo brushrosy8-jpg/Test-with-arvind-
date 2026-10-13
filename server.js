@@ -6,6 +6,11 @@ const bcrypt = require('bcryptjs');
 const Database = require('better-sqlite3');
 const path = require('path');
 
+const multer = require('multer');
+const pdfParse = require('pdf-parse');
+const Tesseract = require('tesseract.js');
+
+
 const app = express();
 // Render terminates HTTPS at its proxy; trust it so secure session cookies work.
 if (process.env.RENDER) app.set('trust proxy', 1);
