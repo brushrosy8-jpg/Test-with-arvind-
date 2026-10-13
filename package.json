@@ -11,6 +11,10 @@
 "bcryptjs": "^2.4.3",
 "better-sqlite3": "^11.5.0",
 "pdf-parse": "1.1.1",
+    
+"pdfjs-dist": "3.11.174",
+"@napi-rs/canvas": "^0.1.68",
+    
 "tesseract.js": "^6.0.1",
 "multer": "^2.0.2",
 
