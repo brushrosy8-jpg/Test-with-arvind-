@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>परीक्षा साथी | ऑनलाइन टेस्ट</title><link rel="stylesheet" href="/style.css"></head>
+<body><header><div class="brand">📘 परीक्षा साथी</div><nav><button class="navbtn active" data-view="home">होम</button><button class="navbtn" data-view="admin">एडमिन लॉगिन</button></nav></header>
+<main><section id="home" class="view">
+<div class="hero"><span class="eyebrow">ऑनलाइन परीक्षा मंच</span><h1>अपनी तैयारी को परखें</h1><p>हिंदी में अभ्यास टेस्ट दें और तुरंत अपना परिणाम देखें।</p></div>
+<div class="sectionhead"><div><h2>उपलब्ध टेस्ट</h2><p>टेस्ट चुनें और शुरू करें।</p></div><button class="secondary" id="refresh">रीफ्रेश करें</button></div><div id="test-list" class="cards"><div class="empty">टेस्ट लोड हो रहे हैं…</div></div>
+</section>
+<section id="admin" class="view hidden"><div id="login-panel" class="panel narrow"><h2>एडमिन लॉगिन</h2><p class="muted">टेस्ट बनाने और परिणाम देखने के लिए लॉगिन करें।</p><form id="login-form"><label>यूज़र आईडी<input name="username" autocomplete="username" required></label><label>पासवर्ड<input name="password" type="password" autocomplete="current-password" required></label><button class="primary wide">लॉगिन करें</button><p id="login-error" class="error"></p></form></div>
+<div id="dashboard" class="hidden"><div class="sectionhead"><div><h2>एडमिन डैशबोर्ड</h2><p class="muted">टेस्ट और परिणाम नियंत्रित करें।</p></div><button class="secondary" id="logout">लॉगआउट</button></div>
+<div class="tabs"><button class="tab active" data-tab="create">नया टेस्ट बनाएँ</button><button class="tab" data-tab="manage">टेस्ट प्रबंधित करें</button><button class="tab" data-tab="results">परिणाम</button><button class="tab" data-tab="password">पासवर्ड बदलें</button></div>
+<div id="tab-create" class="panel"><h3>टेस्ट की जानकारी</h3><form id="test-form"><div class="formgrid"><label>टेस्ट का नाम<input name="title" required placeholder="जैसे: सामान्य ज्ञान टेस्ट 1"></label><label>विषय<input name="subject" placeholder="जैसे: सामान्य ज्ञान"></label><label>समय (मिनट)<input name="duration" type="number" min="1" max="600" value="20" required></label><label>प्रति सही उत्तर अंक<input name="marks" type="number" min="0" step="0.25" value="1" required></label><label>गलत उत्तर पर कटौती<input name="negative" type="number" min="0" step="0.25" value="0" required></label></div>
+<div class="checkrow"><label class="inline"><input name="published" type="checkbox" checked> सेव करते ही विद्यार्थियों के लिए प्रकाशित करें</label></div>
+<div class="sectionhead"><h3>प्रश्न जोड़ें</h3><button type="button" class="secondary" id="add-question">+ प्रश्न जोड़ें</button></div><div id="questions"></div><button class="primary wide">टेस्ट सेव करें</button><p id="create-msg" class="message"></p></form></div>
+<div id="tab-manage" class="panel hidden"><h3>आपके टेस्ट</h3><div id="admin-tests"></div></div>
+<div id="tab-results" class="panel hidden"><h3>विद्यार्थियों के परिणाम</h3><div id="results-table"></div></div>
+<div id="tab-password" class="panel hidden"><h3>पासवर्ड बदलें</h3><form id="password-form" class="narrow"><label>पुराना पासवर्ड<input name="oldPassword" type="password" required></label><label>नया पासवर्ड (कम से कम 12 अक्षर)<input name="newPassword" type="password" minlength="12" required></label><button class="primary">पासवर्ड अपडेट करें</button><p id="password-msg" class="message"></p></form></div>
+</div></section>
+<section id="take-test" class="view hidden"><button class="secondary" id="back-home">← टेस्ट सूची पर लौटें</button><div id="test-area"></div></section>
+</main><footer>परीक्षा साथी · अभ्यास करें, आगे बढ़ें</footer><script src="/app.js"></script></body></html>
