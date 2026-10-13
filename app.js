@@ -547,85 +547,132 @@ async function readUploadedFile(file) {
 }
 
 /* Answer Key से उत्तर पहचानना */
+
+
+/* Answer Key parser: 1-A, 1. A, Q1: A, 1. Ans: B आदि */
 function parseAnswerKey(keyText) {
   const answers = {};
-  const lines = keyText.split(/\r?\n/);
-
-  for (const line of lines) {
-    const text = line.trim();
-
-    // उदाहरण: 1-A, 1. A, प्रश्न 1 उत्तर B
-    const m = text.match(
-      /^(?:प्रश्न\s*)?(\d+)\s*[-.)।:]?\s*(?:उत्तर\s*[:.-]?\s*)?([A-D])(?:\s|$|[.)।,:])/i
+  const text = String(keyText || '')
+    .replace(/\r/g, '\n')
+    .replace(/[Ａ-Ｄａ-ｄ]/g, ch =>
+      String.fromCharCode(ch.charCodeAt(0) - 0xFEE0)
     );
 
-    if (m) {
+  const lines = text.split(/\n+/);
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim().replace(/\s+/g, ' ');
+    if (!line) continue;
+
+    // एक लाइन में कई उत्तर: 1-A  2-B  3-C
+    const re =
+      /(?:^|\s)(?:प्रश्न\s*)?(?:Q\s*)?(\d{1,3})\s*[-.):：।]\s*(?:उत्तर\s*[:.)-]?\s*|Ans(?:wer)?\s*[:.)-]?\s*)?\(?([A-D])\)?(?=\s|$|[,;])/gi;
+
+    let m;
+    while ((m = re.exec(line)) !== null) {
       answers[Number(m[1])] = m[2].toUpperCase();
-      continue;
     }
 
-    // उदाहरण: 1. (A) या 1. Ans: A
-    const n = text.match(
-      /^(?:प्रश्न\s*)?(\d+)\s*[-.)।:]\s*(?:उत्तर|Ans(?:wer)?)?\s*[:.)-]?\s*\(?([A-D])\)?\s*$/i
-    );
+    // एक लाइन में सिर्फ: 1 A / Q1 B
+    const simple =
+      /^(?:प्रश्न\s*)?(?:Q\s*)?(\d{1,3})\s+([A-D])\s*$/i.exec(line);
 
-    if (n) answers[Number(n[1])] = n[2].toUpperCase();
+    if (simple) {
+      answers[Number(simple[1])] = simple[2].toUpperCase();
+    }
   }
 
   return answers;
 }
 
-/* प्रश्न-पत्र को MCQ में बदलना */
+/* प्रश्न-पत्र parser: अलग लाइनों या एक लाइन में A/B/C/D विकल्प */
 function parseQuestionPaper(paperText, keyAnswers) {
-  const normalized = paperText
-    .replace(/\r/g, '')
+  const text = String(paperText || '')
+    .replace(/\r/g, '\n')
     .replace(/[Ａ-Ｄａ-ｄ]/g, ch =>
       String.fromCharCode(ch.charCodeAt(0) - 0xFEE0)
-    );
+    )
+    .replace(/[ \t]+/g, ' ');
 
-  const blocks = normalized
-    .split(/\n(?=\s*(?:प्रश्न\s*)?\d+\s*[.)।:]\s*)/)
-    .map(s => s.trim())
-    .filter(Boolean);
+  // प्रश्न की शुरुआत: 1. / 1) / Q1. / प्रश्न 1.
+  const startRe =
+    /(?:^|\n)\s*(?:(?:प्रश्न|Question|Q)\s*)?(\d{1,3})\s*[.)।:：]\s*/g;
+
+  const starts = [];
+  let match;
+
+  while ((match = startRe.exec(text)) !== null) {
+    starts.push({
+      number: Number(match[1]),
+      contentStart: startRe.lastIndex,
+      start: match.index
+    });
+  }
 
   const questions = [];
 
-  for (const block of blocks) {
-    const lines = block
-      .split('\n')
-      .map(s => s.trim())
-      .filter(Boolean);
+  for (let i = 0; i < starts.length; i++) {
+    const current = starts[i];
+    const end = i + 1 < starts.length
+      ? starts[i + 1].start
+      : text.length;
 
-    if (!lines.length) continue;
+    let block = text.slice(current.contentStart, end).trim();
+    if (!block) continue;
 
-    const first = lines[0].match(
-      /^(?:प्रश्न\s*)?(\d+)\s*[.)।:]\s*(.*)$/
-    );
+    // विकल्प पहचानें: A) / A. / (A) / A: आदि
+    const optionRe =
+      /(?:^|\s)(?:\(([A-D])\)|([A-D])\s*[).:：])\s*/g;
 
-    if (!first) continue;
+    const optionMatches = [];
+    let om;
 
-    const number = Number(first[1]);
-    const promptParts = [first[2]];
-    const opts = {};
-
-    for (const line of lines.slice(1)) {
-      const m = line.match(/^\s*([A-D])\s*[).:]?\s+(.+)$/i);
-
-      if (m) {
-        opts[m[1].toLowerCase()] = m[2].trim();
-      } else {
-        promptParts.push(line);
-      }
+    while ((om = optionRe.exec(block)) !== null) {
+      optionMatches.push({
+        letter: (om[1] || om[2]).toLowerCase(),
+        markerStart: om.index,
+        contentStart: optionRe.lastIndex
+      });
     }
 
-    const prompt = promptParts.join(' ').trim();
+    if (optionMatches.length < 4) continue;
 
-    if (!(prompt && opts.a && opts.b && opts.c && opts.d)) continue;
+    const opts = {};
+    let valid = true;
 
-    const answerLetter = keyAnswers[number] || '';
-    const answerIndex = answerLetter
-      ? ['A', 'B', 'C', 'D'].indexOf(answerLetter)
-      : -1;
+    for (let j = 0; j < optionMatches.length; j++) {
+      const opt = optionMatches[j];
+      const optionEnd = j + 1 < optionMatches.length
+        ? optionMatches[j + 1].markerStart
+        : block.length;
+
+      const value = block
+        .slice(opt.contentStart, optionEnd)
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      if (!value || opts[opt.letter]) {
+        valid = false;
+        break;
+      }
+
+      opts[opt.letter] = value;
+    }
+
+    if (!valid || !['a', 'b', 'c', 'd'].every(k => opts[k])) {
+      continue;
+    }
+
+    // प्रश्न का टेक्स्ट: पहले विकल्प से पहले का हिस्सा
+    const prompt = block
+      .slice(0, optionMatches[0].markerStart)
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (!prompt) continue;
+
+    const answerLetter = keyAnswers[current.number] || '';
+    const answerIndex = ['A', 'B', 'C', 'D'].indexOf(answerLetter);
 
     questions.push({
       prompt,
