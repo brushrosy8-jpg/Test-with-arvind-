@@ -1,5 +1,4 @@
-
-require('dotenv').config();
+const fs = require('fs');
 
 const express = require('express');
 const session = require('express-session');
@@ -441,6 +440,36 @@ app.post(
 );
 
 /* ---------------- Public Tests ---------------- */
+
+app.get('/api/html-tests', (req, res) => {
+  try {
+    const ignored = new Set(['index.html', 'admin.html']);
+
+    const tests = fs.readdirSync(__dirname, {
+      withFileTypes: true
+    })
+      .filter(entry =>
+        entry.isFile() &&
+        entry.name.toLowerCase().endsWith('.html')
+      )
+      .map(entry => entry.name)
+      .filter(name => !ignored.has(name.toLowerCase()))
+      .map(file => ({
+        title: path.basename(file, '.html')
+          .replace(/[-_]+/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim(),
+        url: '/' + encodeURIComponent(file)
+      }));
+
+    res.json(tests);
+  } catch (error) {
+    console.error('HTML test listing failed:', error);
+    res.status(500).json({
+      error: 'HTML टेस्ट सूची लोड नहीं हो सकी।'
+    });
+  }
+});
 
 app.get('/api/tests', (req, res) => {
   const tests = db.prepare(`
