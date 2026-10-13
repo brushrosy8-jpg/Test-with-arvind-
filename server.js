@@ -60,6 +60,55 @@ app.post('/api/admin/login', (req,res) => {
 app.post('/api/admin/logout', (req,res) => { req.session.destroy(()=>res.json({ok:true})); });
 app.get('/api/admin/me', (req,res) => res.json({loggedIn:!!req.session.adminId, username:req.session.adminUsername||''}));
 
+app.post('/api/admin/extract-questions', adminOnly, upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'PDF या फोटो चुनें।' });
+    }
+
+    const name = (req.file.originalname || '').toLowerCase();
+    const isPdf =
+      req.file.mimetype === 'application/pdf' || name.endsWith('.pdf');
+    const isImage =
+      ['image/jpeg', 'image/png', 'image/webp'].includes(req.file.mimetype) ||
+      /\.(jpg|jpeg|png|webp)$/.test(name);
+
+    if (!isPdf && !isImage) {
+      return res.status(400).json({
+        error: 'केवल PDF, JPG, PNG या WEBP फ़ाइल अपलोड करें।'
+      });
+    }
+
+    let text = '';
+
+    if (isPdf) {
+      const result = await pdfParse(req.file.buffer);
+      text = result.text || '';
+    } else {
+      const result = await Tesseract.recognize(
+        req.file.buffer,
+        'eng',
+        { logger: () => {} }
+      );
+      text = result.data.text || '';
+    }
+
+    if (!text.trim()) {
+      return res.status(400).json({
+        error: 'टेक्स्ट नहीं पढ़ पाया। साफ़ PDF या फोटो आज़माएँ।'
+      });
+    }
+
+    res.json({ ok: true, extractedText: text.slice(0, 30000) });
+  } catch (err) {
+    console.error('Question extraction failed:', err.message);
+    res.status(500).json({
+      error: 'फ़ाइल पढ़ने में समस्या हुई। दूसरी फ़ाइल आज़माएँ।'
+    });
+  }
+});
+
+      
 app.get('/api/tests', (req,res) => {
   const tests = db.prepare(`SELECT t.id,t.title,t.subject,t.duration,t.marks,t.negative,
     (SELECT COUNT(*) FROM questions q WHERE q.test_id=t.id) question_count
