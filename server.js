@@ -60,6 +60,7 @@ app.post('/api/admin/login', (req,res) => {
 app.post('/api/admin/logout', (req,res) => { req.session.destroy(()=>res.json({ok:true})); });
 app.get('/api/admin/me', (req,res) => res.json({loggedIn:!!req.session.adminId, username:req.session.adminUsername||''}));
 
+
 app.post('/api/admin/extract-questions', adminOnly, upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
@@ -83,14 +84,62 @@ app.post('/api/admin/extract-questions', adminOnly, upload.single('file'), async
 
     if (isPdf) {
       const result = await pdfParse(req.file.buffer);
-      text = result.text || '';
-    } else {
-      const result = await Tesseract.recognize(
-        req.file.buffer,
-        'eng',
-        { logger: () => {} }
-      );
-      text = result.data.text || '';
+      text = (result.text || '').trim();
+    }
+
+    if (!isPdf || text.length < 40) {
+      if (isPdf) {
+        const pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js');
+        const { createCanvas } = require('@napi-rs/canvas');
+
+        const pdf = await pdfjsLib.getDocument({
+          data: new Uint8Array(req.file.buffer)
+        }).promise;
+
+        if (pdf.numPages > 30) {
+          await pdf.destroy();
+          return res.status(400).json({
+            error: 'PDF में 30 से अधिक पेज हैं। छोटे भागों में अपलोड करें।'
+          });
+        }
+
+        const pages = [];
+
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const viewport = page.getViewport({ scale: 1.8 });
+          const canvas = createCanvas(
+            Math.ceil(viewport.width),
+            Math.ceil(viewport.height)
+          );
+
+          await page.render({
+            canvasContext: canvas.getContext('2d'),
+            viewport
+          }).promise;
+
+          const result = await Tesseract.recognize(
+            canvas.toBuffer('image/png'),
+            'hin+eng',
+            { logger: () => {} }
+          );
+
+          pages.push(result.data.text || '');
+          if (pages.join('\n').length >= 30000) break;
+        }
+
+        await pdf.destroy();
+
+        const ocrText = pages.join('\n').trim();
+        if (ocrText.length > text.length) text = ocrText;
+      } else {
+        const result = await Tesseract.recognize(
+          req.file.buffer,
+          'hin+eng',
+          { logger: () => {} }
+        );
+        text = (result.data.text || '').trim();
+      }
     }
 
     if (!text.trim()) {
@@ -99,16 +148,18 @@ app.post('/api/admin/extract-questions', adminOnly, upload.single('file'), async
       });
     }
 
-    res.json({ ok: true, extractedText: text.slice(0, 30000) });
+    res.json({
+      ok: true,
+      extractedText: text.slice(0, 30000)
+    });
   } catch (err) {
-    console.error('Question extraction failed:', err.message);
+    console.error('Question extraction failed:', err);
     res.status(500).json({
-      error: 'फ़ाइल पढ़ने में समस्या हुई। दूसरी फ़ाइल आज़माएँ।'
+      error: 'फ़ाइल पढ़ने में समस्या हुई। कृपया दूसरी फ़ाइल आज़माएँ।'
     });
   }
 });
 
-      
 app.get('/api/tests', (req,res) => {
   const tests = db.prepare(`SELECT t.id,t.title,t.subject,t.duration,t.marks,t.negative,
     (SELECT COUNT(*) FROM questions q WHERE q.test_id=t.id) question_count
