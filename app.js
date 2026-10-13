@@ -25,3 +25,56 @@ async function deleteTest(id){if(!confirm('क्या आप यह टेस�
 async function loadResults(){try{const rs=await api('/api/admin/results');$('#results-table').innerHTML=rs.length?`<div class="tablewrap"><table><thead><tr><th>टेस्ट</th><th>विद्यार्थी</th><th>अंक</th><th>सही</th><th>गलत</th><th>प्रयास</th><th>तिथि</th></tr></thead><tbody>${rs.map(r=>`<tr><td>${esc(r.test_title)}</td><td>${esc(r.student_name)}</td><td>${r.score}</td><td>${r.correct}</td><td>${r.wrong}</td><td>${r.attempted}</td><td>${esc(r.created_at)}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">अभी कोई परिणाम नहीं है।</p>'}catch(e){$('#results-table').textContent=e.message}}
 $('#password-form').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);try{await api('/api/admin/change-password',{method:'POST',body:JSON.stringify({oldPassword:f.get('oldPassword'),newPassword:f.get('newPassword')})});$('#password-msg').textContent='पासवर्ड सफलतापूर्वक बदल गया।';$('#password-msg').className='message success';e.target.reset()}catch(err){$('#password-msg').textContent=err.message;$('#password-msg').className='message error'}};
 loadTests();
+
+const extractButton = document.querySelector('#extract-questions');
+
+if (extractButton) {
+  extractButton.onclick = async () => {
+    const fileInput = document.querySelector('#question-file');
+    const message = document.querySelector('#extract-msg');
+    const file = fileInput.files[0];
+
+    if (!file) {
+      message.textContent = 'पहले PDF या फोटो चुनें।';
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    extractButton.disabled = true;
+    message.textContent = 'फ़ाइल पढ़ी जा रही है, कृपया प्रतीक्षा करें…';
+
+    try {
+      const response = await fetch('/api/admin/extract-questions', {
+        method: 'POST',
+        body: formData
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'फ़ाइल पढ़ने में समस्या हुई।');
+      }
+
+      message.textContent = result.extractedText
+        ? 'निकला हुआ टेक्स्ट नीचे देखें और जाँचें।'
+        : 'कोई टेक्स्ट नहीं मिला।';
+
+      let output = document.querySelector('#extracted-text');
+      if (!output) {
+        output = document.createElement('textarea');
+        output.id = 'extracted-text';
+        output.rows = 12;
+        output.style.width = '100%';
+        message.after(output);
+      }
+
+      output.value = result.extractedText || '';
+    } catch (error) {
+      message.textContent = error.message;
+    } finally {
+      extractButton.disabled = false;
+    }
+  };
+}
