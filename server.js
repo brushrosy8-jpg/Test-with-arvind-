@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS results (
 `);
 
 const adminUser = process.env.ADMIN_USERNAME || 'admin';
-const adminPass = process.env.ADMIN_PASSWORD;
+const adminPass = process.env.ADMIN_PASSWORD || 'arvind’;
 
 if (!adminPass && !db.prepare('SELECT id FROM admins WHERE username=?').get(adminUser)) {
   console.warn('Set ADMIN_PASSWORD in environment before creating an admin account.');
