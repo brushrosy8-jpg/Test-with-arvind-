@@ -31,6 +31,12 @@ if (!db.prepare('SELECT id FROM admins WHERE username=?').get(adminUser)) {
 }
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json({ limit: '1mb' }));
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024, files: 1 }
+});
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'development-only-change-this-secret',
   resave: false, saveUninitialized: false,
