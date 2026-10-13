@@ -27,6 +27,93 @@ $('#password-form').onsubmit=async e=>{e.preventDefault();const f=new FormData(e
 loadTests();
 
 const extractButton = document.querySelector('#extract-questions');
+const autoCreateButton = document.querySelector('#auto-create-questions');
+
+if (autoCreateButton) {
+autoCreateButton.onclick = async () => {
+const paperFile = document.querySelector('#question-file')?.files[0];
+const keyFile = document.querySelector('#answer-key-file')?.files[0];
+const msg = document.querySelector('#auto-create-msg');
+
+if (!paperFile || !keyFile) {
+  msg.textContent = 'पहले प्रश्न-पत्र और Answer Key दोनों चुनें।';
+  return;
+}
+
+autoCreateButton.disabled = true;
+msg.textContent = 'फ़ाइलें पढ़ी जा रही हैं…';
+
+async function readFile(file) {
+  const data = new FormData();
+  data.append('file', file);
+
+  const res = await fetch('/api/admin/extract-questions', {
+    method: 'POST',
+    body: data
+  });
+
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.error || 'फ़ाइल पढ़ने में समस्या हुई।');
+  return result.extractedText || '';
+}
+
+try {
+  const paperText = await readFile(paperFile);
+  const keyText = await readFile(keyFile);
+
+  const keyAnswers = {};
+  const keyRegex = /(?:प्रश्न\s*)?(\d+)\s*[-.)।:]?\s*(?:उत्तर\s*[:.-]?\s*)?([A-D])\b/gi;
+  let match;
+
+  while ((match = keyRegex.exec(keyText)) !== null) {
+    keyAnswers[Number(match[1])] = match[2].toUpperCase();
+  }
+
+  const blocks = paperText.replace(/\r/g, '')
+    .split(/\n(?=\s*(?:प्रश्न\s*)?\d+\s*[.)।:])/)
+    .map(s => s.trim()).filter(Boolean);
+
+  const questions = [];
+
+  for (const block of blocks) {
+    const lines = block.split('\n').map(s => s.trim()).filter(Boolean);
+    const first = lines[0].match(/^(?:प्रश्न\s*)?(\d+)\s*[.)।:]\s*(.*)$/);
+    if (!first) continue;
+
+    const number = Number(first[1]);
+    const prompt = first[2];
+    const opts = {};
+
+    for (const line of lines.slice(1)) {
+      const m = line.match(/^\s*([A-D])\s*[).:]?\s+(.+)$/i);
+      if (m) opts[m[1].toLowerCase()] = m[2].trim();
+    }
+
+    if (prompt && opts.a && opts.b && opts.c && opts.d) {
+      const answerLetter = keyAnswers[number] || 'A';
+      questions.push({
+        prompt,
+        a: opts.a, b: opts.b, c: opts.c, d: opts.d,
+        answer: ['A', 'B', 'C', 'D'].indexOf(answerLetter),
+        explanation: ''
+      });
+    }
+  }
+
+  if (!questions.length) {
+    throw new Error('MCQ नहीं मिले। अभी प्रश्नों की बनावट जाँचनी होगी।');
+  }
+
+  await autoFillQuestions(questions);
+  msg.textContent = `${questions.length} प्रश्न बन गए। कृपया सही उत्तर जाँच लें।`;
+} catch (error) {
+  msg.textContent = error.message;
+} finally {
+  autoCreateButton.disabled = false;
+}
+
+};
+}
 async function autoFillQuestions(questions) {
   if (!Array.isArray(questions) || !questions.length) {
     alert('कोई MCQ नहीं मिला। पेपर का फॉर्मेट जाँचें।');
