@@ -471,6 +471,68 @@ app.get('/api/html-tests', (req, res) => {
   }
 });
 
+/* -------- Public Database Test APIs -------- */
+
+// Published tests ki list
+app.get('/api/tests', (req, res) => {
+  try {
+    const tests = db.prepare(`
+      SELECT t.id, t.title, t.subject, t.duration, t.marks, t.negative,
+        (SELECT COUNT(*) FROM questions q
+         WHERE q.test_id = t.id) AS question_count
+      FROM tests t
+      WHERE t.published = 1
+      ORDER BY t.id DESC
+    `).all();
+
+    res.json(tests);
+  } catch (error) {
+    console.error('Test listing error:', error);
+    res.status(500).json({
+      error: 'टेस्ट सूची लोड नहीं हो सकी।'
+    });
+  }
+});
+
+// Ek selected test ke questions load karna
+app.get('/api/tests/:id', (req, res) => {
+  try {
+    const id = Number(req.params.id);
+
+    if (!Number.isInteger(id) || id < 1) {
+      return res.status(400).json({
+        error: 'टेस्ट ID सही नहीं है।'
+      });
+    }
+
+    const test = db.prepare(`
+      SELECT id, title, subject, duration, marks, negative
+      FROM tests
+      WHERE id = ? AND published = 1
+    `).get(id);
+
+    if (!test) {
+      return res.status(404).json({
+        error: 'टेस्ट नहीं मिला या प्रकाशित नहीं है।'
+      });
+    }
+
+    const questions = db.prepare(`
+      SELECT id, prompt, a, b, c, d
+      FROM questions
+      WHERE test_id = ?
+      ORDER BY id
+    `).all(id);
+
+    res.json({ ...test, questions });
+  } catch (error) {
+    console.error('Test loading error:', error);
+    res.status(500).json({
+      error: 'टेस्ट खोलने में समस्या हुई।'
+    });
+  }
+});
+
 app.post('/api/tests/:id/submit', (req, res) => {
   const id = Number(req.params.id);
   const test = db.prepare(
