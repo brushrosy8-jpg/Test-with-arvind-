@@ -61,50 +61,68 @@ $('#back-home').onclick = () => {
 };
 
 
+
 async function loadTests() {
   const box = $('#test-list');
 
-  try {
-    const [tests, htmlTests] = await Promise.all([
-      api('/api/tests'),
-      api('/api/html-tests').catch(() => [])
-    ]);
+  const [testsResult, htmlResult] = await Promise.allSettled([
+    api('/api/tests'),
+    api('/api/html-tests')
+  ]);
 
-    const databaseCards = tests.map(t => `
-      <article class="testcard">
-        <h3>${esc(t.title)}</h3>
-        <div class="meta">
-          ${esc(t.subject || 'सामान्य टेस्ट')} ·
-          ${t.question_count} प्रश्न ·
-          ${t.duration} मिनट ·
-          प्रति सही ${t.marks} अंक
-        </div>
-        <button class="primary" onclick="startTest(${t.id})">
-          टेस्ट शुरू करें
-        </button>
-      </article>
-    `);
+  const tests =
+    testsResult.status === 'fulfilled' ? testsResult.value : [];
 
-    const htmlCards = htmlTests.map(t => `
-      <article class="testcard">
-        <h3>${esc(t.title)}</h3>
-        <div class="meta">अलग HTML टेस्ट</div>
-        <a class="primary" href="${esc(t.url)}">
-          टेस्ट शुरू करें
-        </a>
-      </article>
-    `);
+  const htmlTests =
+    htmlResult.status === 'fulfilled' ? htmlResult.value : [];
 
-    const cards = [...databaseCards, ...htmlCards];
+  const databaseCards = tests.map(t => `
+    <article class="testcard">
+      <h3>${esc(t.title)}</h3>
+      <div class="meta">
+        ${esc(t.subject || 'सामान्य टेस्ट')} ·
+        ${t.question_count} प्रश्न ·
+        ${t.duration} मिनट ·
+        प्रति सही ${t.marks} अंक
+      </div>
+      <button class="primary" onclick="startTest(${t.id})">
+        टेस्ट शुरू करें
+      </button>
+    </article>
+  `);
 
-    box.innerHTML = cards.length
-      ? cards.join('')
-      : '<div class="empty">अभी कोई टेस्ट उपलब्ध नहीं है।</div>';
+  const htmlCards = htmlTests.map(t => `
+    <article class="testcard">
+      <h3>${esc(t.title)}</h3>
+      <div class="meta">अलग HTML टेस्ट</div>
+      <a class="primary" href="${esc(t.url)}">
+        टेस्ट शुरू करें
+      </a>
+    </article>
+  `);
 
-  } catch (e) {
-    box.innerHTML = `<div class="empty">${esc(e.message)}</div>`;
+  const cards = [...databaseCards, ...htmlCards];
+  const errors = [];
+
+  if (testsResult.status === 'rejected') {
+    errors.push('सामान्य टेस्ट लोड नहीं हुए।');
   }
+
+  if (htmlResult.status === 'rejected') {
+    errors.push('HTML टेस्ट लोड नहीं हुए।');
+  }
+
+  box.innerHTML = (
+    cards.length
+      ? cards.join('')
+      : '<div class="empty">अभी कोई टेस्ट उपलब्ध नहीं है।</div>'
+  ) + (
+    errors.length
+      ? `<div class="empty">${errors.map(esc).join(' ')}</div>`
+      : ''
+  );
 }
+
 
 
 async function startTest(id) {
