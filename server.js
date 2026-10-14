@@ -471,44 +471,18 @@ app.get('/api/html-tests', (req, res) => {
   }
 });
 
-app.get('/api/tests', (req, res) => {
-  const tests = db.prepare(`
-    SELECT t.id,t.title,t.subject,t.duration,t.marks,t.negative,
-      (SELECT COUNT(*) FROM questions q WHERE q.test_id=t.id) question_count
-    FROM tests t
-    WHERE t.published=1
-    ORDER BY t.id DESC
-  `).all();
-
-  res.json(tests);
-});
-
-app.get('/api/tests/:id', (req, res) => {
-  const test = db.prepare(`
-    SELECT id,title,subject,duration,marks,negative
-    FROM tests WHERE id=? AND published=1
-  `).get(Number(req.params.id));
-
-  if (!test) return res.status(404).json({ error: 'टेस्ट नहीं मिला।' });
-
-  const questions = db.prepare(`
-    SELECT id,prompt,a,b,c,d
-    FROM questions WHERE test_id=? ORDER BY id
-  `).all(test.id);
-
-  res.json({ ...test, questions });
-});
-
 app.post('/api/tests/:id/submit', (req, res) => {
   const id = Number(req.params.id);
   const test = db.prepare(
     'SELECT * FROM tests WHERE id=? AND published=1'
   ).get(id);
 
-  if (!test) return res.status(404).json({ error: 'टेस्ट नहीं मिला।' });
+  if (!test) {
+    return res.status(404).json({ error: 'टेस्ट नहीं मिला।' });
+  }
 
   const questions = db.prepare(`
-    SELECT id,answer,explanation
+    SELECT id, prompt, a, b, c, d, answer, explanation
     FROM questions WHERE test_id=? ORDER BY id
   `).all(id);
 
@@ -524,9 +498,13 @@ app.post('/api/tests/:id/submit', (req, res) => {
       ? null
       : Number(value);
 
-    if (chosen !== null) {
+    const validChoice = [0, 1, 2, 3].includes(chosen);
+    const chosenAnswer = validChoice ? chosen : null;
+
+    if (chosenAnswer !== null) {
       attempted++;
-      if (chosen === q.answer) {
+
+      if (chosenAnswer === q.answer) {
         correct++;
         score += Number(test.marks);
       } else {
@@ -537,24 +515,54 @@ app.post('/api/tests/:id/submit', (req, res) => {
 
     return {
       id: q.id,
+      prompt: q.prompt,
+      options: [q.a, q.b, q.c, q.d],
+      chosenAnswer,
       correctAnswer: q.answer,
+      isCorrect: chosenAnswer === q.answer,
       explanation: q.explanation || ''
     };
   });
 
   score = Math.round(score * 100) / 100;
 
-  db.prepare(`
-    INSERT INTO results(test_id,student_name,score,correct,wrong,attempted)
-    VALUES(?,?,?,?,?,?)
-  `).run(
-    id,
-    String(req.body?.name || 'विद्यार्थी').slice(0, 80),
-    score,
-    correct,
-    wrong,
-    attempted
-  );
+  const studentName = String(req.body?.name || 'विद्यार्थी')
+    .trim()
+    .slice(0, 80) || 'विद्यार्थी';
+
+  const saved = db.prepare(`
+    INSERT INTO results
+      (test_id, student_name, score, correct, wrong, attempted)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(id, studentName, score, correct, wrong, attempted);
+
+  const rank = db.prepare(`
+    SELECT COUNT(*) + 1 AS rank
+    FROM results
+    WHERE test_id = ?
+      AND (
+        score > ?
+        OR (score = ? AND correct > ?)
+        OR (
+          score = ? AND correct = ?
+          AND (
+            created_at < (
+              SELECT created_at FROM results WHERE id = ?
+            )
+            OR (
+              created_at = (
+                SELECT created_at FROM results WHERE id = ?
+              )
+              AND id < ?
+            )
+          )
+        )
+      )
+  `).get(
+    id, score, score, correct,
+    score, correct, saved.lastInsertRowid,
+    saved.lastInsertRowid, saved.lastInsertRowid
+  ).rank;
 
   res.json({
     title: test.title,
@@ -562,11 +570,46 @@ app.post('/api/tests/:id/submit', (req, res) => {
     correct,
     wrong,
     attempted,
+    skipped: questions.length - attempted,
     score,
     maxScore: questions.length * Number(test.marks),
+    rank,
+    resultId: saved.lastInsertRowid,
     details
   });
 });
+
+app.get('/api/tests/:id/leaderboard', (req, res) => {
+  const id = Number(req.params.id);
+
+  const test = db.prepare(
+    'SELECT id, title FROM tests WHERE id=?'
+  ).get(id);
+
+  if (!test) {
+    return res.status(404).json({ error: 'टेस्ट नहीं मिला।' });
+  }
+
+  const rows = db.prepare(`
+    SELECT student_name, score, correct, created_at
+    FROM results
+    WHERE test_id=?
+    ORDER BY score DESC, correct DESC, created_at ASC, id ASC
+    LIMIT 10
+  `).all(id);
+
+  res.json({
+    title: test.title,
+    leaderboard: rows.map((row, index) => ({
+      rank: index + 1,
+      name: row.student_name,
+      score: row.score,
+      correct: row.correct,
+      date: row.created_at
+    }))
+  });
+});
+
 
 /* ---------------- Admin Test Management ---------------- */
 
