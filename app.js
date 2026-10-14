@@ -213,37 +213,115 @@ async function submitTest(auto) {
       body: JSON.stringify({ answers, name })
     });
 
+    let leaderboard = [];
+    try {
+      const board = await api(`/api/tests/${currentTest.id}/leaderboard`);
+      leaderboard = board.leaderboard || [];
+    } catch (e) {
+      console.warn('Leaderboard load failed:', e);
+    }
+
     $('#test-area').innerHTML = `
-      <div class="panel">
+      <div class="panel result-page">
         <h2>${esc(r.title)} — परिणाम</h2>
 
         <div class="resultbox">
-          <div class="score">${r.score} / ${r.maxScore}</div>
-          <p>कुल प्रश्न: ${r.total} · प्रयास किए: ${r.attempted}</p>
-          <p>
-            सही उत्तर: <b>${r.correct}</b> ·
-            गलत उत्तर: <b>${r.wrong}</b> ·
-            छोड़े: <b>${r.total - r.attempted}</b>
-          </p>
+          <p>आपकी रैंक</p>
+          <div class="score">#${r.rank ?? '—'}</div>
+          <p>${r.score} / ${r.maxScore} अंक</p>
         </div>
 
-        <h3>उत्तर और व्याख्या</h3>
+        <div class="optiongrid">
+          <div class="panel">
+            <h3>${r.total}</h3>
+            <p>कुल प्रश्न</p>
+          </div>
+          <div class="panel">
+            <h3>${r.correct}</h3>
+            <p>सही उत्तर</p>
+          </div>
+          <div class="panel">
+            <h3>${r.wrong}</h3>
+            <p>गलत उत्तर</p>
+          </div>
+          <div class="panel">
+            <h3>${r.skipped ?? (r.total - r.attempted)}</h3>
+            <p>छोड़े गए</p>
+          </div>
+        </div>
+
+        <h3>प्रश्नों के उत्तर और समाधान</h3>
 
         ${r.details.map((d, i) => {
           const q = currentTest.questions.find(x => x.id === d.id);
           if (!q) return '';
 
+          const options = [q.a, q.b, q.c, q.d];
+          const chosen = d.chosenAnswer;
+          const correctAnswer = d.correctAnswer;
+
           return `
             <div class="test-question">
               <b>${i + 1}. ${esc(q.prompt)}</b>
-              <p class="success">
-                सही उत्तर: ${'ABCD'[d.correctAnswer]}.
-                ${esc([q.a, q.b, q.c, q.d][d.correctAnswer])}
+
+              <p>
+                आपका उत्तर:
+                <strong>${chosen === null || chosen === undefined
+                  ? 'प्रयास नहीं किया'
+                  : `${'ABCD'[chosen]}. ${esc(options[chosen] || '')}`}
+                </strong>
               </p>
-              ${d.explanation ? `<p>${esc(d.explanation)}</p>` : ''}
+
+              <p class="success">
+                सही उत्तर:
+                <strong>${'ABCD'[correctAnswer]}.
+                  ${esc(options[correctAnswer] || '')}
+                </strong>
+              </p>
+
+              <p>
+                परिणाम:
+                <strong>${chosen === null || chosen === undefined
+                  ? 'छोड़ा गया'
+                  : chosen === correctAnswer
+                    ? 'सही'
+                    : 'गलत'}
+                </strong>
+              </p>
+
+              ${d.explanation
+                ? `<p><b>समाधान:</b> ${esc(d.explanation)}</p>`
+                : '<p class="muted">इस प्रश्न की व्याख्या उपलब्ध नहीं है।</p>'}
             </div>
           `;
         }).join('')}
+
+        <h3>🏆 टॉप 10 लीडरबोर्ड</h3>
+
+        ${leaderboard.length
+          ? `<div class="tablewrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>रैंक</th>
+                    <th>विद्यार्थी</th>
+                    <th>अंक</th>
+                    <th>सही</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${leaderboard.map(item => `
+                    <tr>
+                      <td>${item.rank}</td>
+                      <td>${esc(item.name)}</td>
+                      <td>${item.score}</td>
+                      <td>${item.correct}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>`
+          : '<p class="muted">अभी लीडरबोर्ड उपलब्ध नहीं है।</p>'}
 
         <button class="primary wide"
           onclick="showView('home');loadTests()">
@@ -251,6 +329,7 @@ async function submitTest(auto) {
         </button>
       </div>
     `;
+
   } catch (e) {
     alert(e.message);
     if ($('#answer-form')) {
