@@ -441,19 +441,71 @@ async function submitActiveTest(isAuto = false) {
     } catch(e) { alert('नेटवर्क त्रुटि'); }
 }
 
+
 function renderResultScreen(res) {
     const contentDiv = document.getElementById('app-content');
+    const score = Number(res.percentage) || 0;
+
+    let message = '';
+    let gif = '';
+
+    if (score >= 80 && score <= 100) {
+        message = 'Ale meri laado Ummmaa😘';
+        gif = '/gifs/laado-teddy.gif';
+    } 
+    else if (score >= 71 && score < 80) {
+        message = 'aaaja meri rusmlai 😚';
+        gif = '/gifs/rusmlai.gif';
+    } 
+    else if (score >= 60 && score < 71) {
+        message = 'Love you ji aap jit gye 🥰🥰🫂🫂';
+        gif = '/gifs/love-bunnies.gif';
+    } 
+    else if (score >= 50 && score < 60) {
+        message = 'y kya h 🫤';
+        gif = '/gifs/y-kya-h-cat.gif';
+    } 
+    else {
+        message = '😤😤😤😤😤😤atraaaaa kmmm😤😤😤';
+        gif = '/gifs/atraaaaa-kmmm.gif';
+    }
+
     contentDiv.innerHTML = `
-        <div class="bg-white rounded-2xl shadow-xl p-8 max-w-3xl mx-auto space-y-6 text-center">
-            <span class="text-5xl">🎉</span>
-            <h2 class="text-2xl font-bold text-slate-800">टेस्ट सफलतापर्वूक संपन्न हुआ!</h2>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-xl">
-                <div><p class="text-xs text-gray-500">कुल स्कोर</p><p class="text-2xl font-bold text-indigo-600">${res.score} अंक</p></div>
-                <div><p class="text-xs text-gray-500">प्रतिशत</p><p class="text-2xl font-bold text-emerald-600">${res.percentage}%</p></div>
-                <div><p class="text-xs text-gray-500">सही उत्तर</p><p class="text-2xl font-bold text-green-600">${res.correct_count}</p></div>
-                <div><p class="text-xs text-gray-500">गलत उत्तर</p><p class="text-2xl font-bold text-red-600">${res.incorrect_count}</p></div>
+        <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-5 sm:p-8 text-center space-y-5">
+            <h2 class="text-2xl sm:text-3xl font-bold text-pink-600">
+                ${message}
+            </h2>
+
+            <img
+                src="${gif}"
+                alt="Special animated GIF"
+                class="mx-auto w-full max-w-xs rounded-xl object-contain"
+                style="max-height: 360px"
+            />
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-slate-50 rounded-xl">
+                <div>
+                    <p class="text-xs text-gray-500">कुल स्कोर</p>
+                    <p class="text-xl font-bold text-indigo-600">${res.score} अंक</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">प्रतिशत</p>
+                    <p class="text-xl font-bold text-emerald-600">${res.percentage}%</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">सही उत्तर</p>
+                    <p class="text-xl font-bold text-green-600">${res.correct_count}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">गलत उत्तर</p>
+                    <p class="text-xl font-bold text-red-600">${res.incorrect_count}</p>
+                </div>
             </div>
-            <button onclick="checkAuth()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow">डैशबोर्ड पर लौटें</button>
+
+            <button onclick="checkAuth()"
+                class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow">
+                डैशबोर्ड पर लौटें
+            </button>
         </div>
     `;
 }
