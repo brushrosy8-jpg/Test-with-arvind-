@@ -371,7 +371,7 @@ app.post('/api/admin/upload-html', requireAdmin, upload.single('htmlFile'), (req
             }
         }
 
-        });
+        
 
         // Do not create fake questions when import fails
 if (questions.length === 0) {
