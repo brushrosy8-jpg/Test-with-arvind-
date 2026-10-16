@@ -207,9 +207,8 @@ app.post('/api/tests/submit', requireStudent, (req, res) => {
             let correctCount = 0;
             let incorrectCount = 0;
             let unansweredCount = 0;
-            const plus = test.marks_correct || 2;
-            const minus = test.marks_incorrect || 1;
-
+            const plus = test.marks_correct ?? 2;
+            const minus = test.marks_incorrect ?? 1;
             questions.forEach(q => {
                 const userAns = answers[q.id];
                 const correctAnswer = q.correct_answer;
@@ -223,7 +222,7 @@ app.post('/api/tests/submit', requireStudent, (req, res) => {
                 }
             });
 
-            const finalScore = Math.max(0, rawScore);
+            const finalScore = rawScore;
             const maxScore = questions.length * plus;
             const percentage = maxScore > 0 ? ((finalScore / maxScore) * 100).toFixed(1) : 0;
 
