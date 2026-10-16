@@ -209,18 +209,34 @@ app.post('/api/tests/submit', requireStudent, (req, res) => {
             let unansweredCount = 0;
             const plus = test.marks_correct ?? 2;
             const minus = test.marks_incorrect ?? 1;
-            questions.forEach(q => {
-                const userAns = answers[q.id];
-                const correctAnswer = q.correct_answer;
-                if (!userAns) unansweredCount++;
-                else if (userAns === correctAnswer) {
-                    rawScore += plus;
-                    correctCount++;
-                } else {
-                    rawScore -= minus;
-                    incorrectCount++;
-                }
-            });
+            const review = questions.map(q => {
+    const userAns = answers[q.id] || null;
+    const correctAnswer = q.correct_answer;
+    const isCorrect = userAns === correctAnswer;
+
+    if (!userAns) unansweredCount++;
+    else if (isCorrect) {
+        rawScore += plus;
+        correctCount++;
+    } else {
+        rawScore -= minus;
+        incorrectCount++;
+    }
+
+    return {
+        question: q.question,
+        options: {
+            A: q.option_a,
+            B: q.option_b,
+            C: q.option_c,
+            D: q.option_d
+        },
+        user_answer: userAns,
+        correct_answer: correctAnswer,
+        is_correct: isCorrect,
+        explanation: q.explanation || ''
+    };
+});
 
             const finalScore = rawScore;
             const maxScore = questions.length * plus;
@@ -231,7 +247,16 @@ app.post('/api/tests/submit', requireStudent, (req, res) => {
                 [studentId, studentName, test_id, test.subject, finalScore, correctCount, incorrectCount, unansweredCount, percentage],
                 function(err) {
                     if (err) console.error(err);
-                    res.json({ success: true, score: finalScore, maxScore, percentage, correct_count: correctCount, incorrect_count: incorrectCount, unanswered_count: unansweredCount });
+                    res.json({
+    success: true,
+    score: finalScore,
+    maxScore,
+    percentage,
+    correct_count: correctCount,
+    incorrect_count: incorrectCount,
+    unanswered_count: unansweredCount,
+    review
+});
                 }
             );
         });
