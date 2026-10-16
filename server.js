@@ -318,14 +318,12 @@ app.post('/api/admin/upload-html', requireAdmin, upload.single('htmlFile'), (req
             }
         });
 
-        // Fallback if no specific blocks found
-        if (questions.length === 0) {
-            questions.push({
-                question: 'इम्पोर्टेड प्रश्न 1 (कृपया एडिटर में एडिट करें)',
-                option_a: 'विकल्प A', option_b: 'विकल्प B', option_c: 'विकल्प C', option_d: 'विकल्प D',
-                correct_answer: 'A', explanation: 'व्याख्या जोड़ें'
-            });
-        }
+        // Do not create fake questions when import fails
+if (questions.length === 0) {
+    return res.status(400).json({
+        error: 'इस HTML फ़ाइल में प्रश्न नहीं मिले। फ़ाइल का प्रारूप जाँचें।'
+    });
+}
 
         db.run(`INSERT INTO tests (title, subject, duration, published) VALUES (?, ?, 20, 0)`, [title || 'इम्पोर्टेड टेस्ट', subject || 'गणित'], function(err) {
             if (err) return res.status(500).json({ error: 'DB error creating test' });
