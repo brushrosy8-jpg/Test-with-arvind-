@@ -502,10 +502,55 @@ function renderResultScreen(res) {
                 </div>
             </div>
 
-            <button onclick="checkAuth()"
-                class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow">
-                डैशबोर्ड पर लौटें
-            </button>
+            <div class="text-left space-y-4">
+    <h3 class="text-xl font-bold text-slate-800 border-b pb-2">
+        📘 प्रश्नों के सही उत्तर और समाधान
+    </h3>
+
+    ${(res.review || []).map((item, index) => {
+        const correctText =
+            item.options?.[item.correct_answer] || 'उत्तर उपलब्ध नहीं';
+
+        const chosenText = item.user_answer
+            ? item.options?.[item.user_answer]
+            : 'उत्तर नहीं दिया';
+
+        return `
+            <div class="border rounded-xl p-4 space-y-2
+                ${item.is_correct
+                    ? 'border-green-200 bg-green-50'
+                    : 'border-red-200 bg-red-50'}">
+
+                <p class="font-bold text-slate-800">
+                    प्रश्न ${index + 1}: ${item.question}
+                </p>
+
+                <p>
+                    <b>आपका उत्तर:</b>
+                    ${item.user_answer
+                        ? item.user_answer + '. ' + chosenText
+                        : chosenText}
+                </p>
+
+                <p class="text-green-800">
+                    <b>सही उत्तर:</b>
+                    ${item.correct_answer}. ${correctText}
+                </p>
+
+                <p>
+                    <b>व्याख्या / समाधान:</b>
+                    ${item.explanation ||
+                      'इस प्रश्न की व्याख्या अभी उपलब्ध नहीं है।'}
+                </p>
+            </div>
+        `;
+    }).join('')}
+</div>
+
+<button onclick="checkAuth()"
+    class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow">
+    डैशबोर्ड पर लौटें
+</button>
         </div>
     `;
 }
