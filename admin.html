@@ -247,6 +247,25 @@
 
         async function saveDraftTest() {
             if(!currentDraftTestId) return;
+            
+const settingsRes = await fetch(
+    `/api/admin/tests/${currentDraftTestId}/settings`,
+    {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            duration: Number(document.getElementById('test-duration').value),
+            marks_correct: Number(document.getElementById('test-marks-correct').value),
+            marks_incorrect: Number(document.getElementById('test-marks-incorrect').value)
+        })
+    }
+);
+
+if (!settingsRes.ok) {
+    alert('टेस्ट की सेटिंग सेव नहीं हुई।');
+    return;
+}
+
             const rows = document.querySelectorAll('.question-row');
             const questions = [];
             rows.forEach(r => {
