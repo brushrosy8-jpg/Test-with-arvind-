@@ -403,6 +403,28 @@ app.get('/api/admin/tests/:id/questions', requireAdmin, (req, res) => {
     });
 });
 
+app.put('/api/admin/tests/:id/settings', requireAdmin, (req, res) => {
+    const duration = Number(req.body.duration);
+    const correct = Number(req.body.marks_correct);
+    const incorrect = Number(req.body.marks_incorrect);
+
+    if (!Number.isFinite(duration) || duration < 1 || duration > 300 ||
+        !Number.isFinite(correct) || correct <= 0 ||
+        !Number.isFinite(incorrect) || incorrect < 0) {
+        return res.status(400).json({ error: 'समय या अंक गलत हैं।' });
+    }
+
+    db.run(
+        'UPDATE tests SET duration = ?, marks_correct = ?, marks_incorrect = ? WHERE id = ?',
+        [duration, correct, incorrect, req.params.id],
+        function(err) {
+            if (err) return res.status(500).json({ error: 'सेटिंग सेव नहीं हुई।' });
+            if (!this.changes) return res.status(404).json({ error: 'टेस्ट नहीं मिला।' });
+            res.json({ success: true });
+        }
+    );
+});
+
 app.put('/api/admin/tests/:id/questions', requireAdmin, (req, res) => {
     const testId = req.params.id;
     const { questions } = req.body;
