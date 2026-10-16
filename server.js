@@ -283,39 +283,94 @@ app.post('/api/admin/upload-html', requireAdmin, upload.single('htmlFile'), (req
         const htmlContent = fs.readFileSync(req.file.path, 'utf8');
         fs.unlinkSync(req.file.path);
 
-        // Simple robust regex parsing for question blocks
+        // Read questions from the uploaded HTML's JavaScript array
         const questions = [];
-        const blocks = htmlContent.split(/<div[^>]*class=["']question-block["'][^>]*>/i);
-        
-        blocks.slice(1).forEach((block, idx) => {
-            const qMatch = block.match(/<p[^>]*class=["']question["'][^>]*>([\s\S]*?)<\/p>/i);
-            const aMatch = block.match(/<p[^>]*class=["']answer["'][^>]*>([\s\S]*?)<\/p>/i);
-            const eMatch = block.match(/<p[^>]*class=["']explanation["'][^>]*>([\s\S]*?)<\/p>/i);
-            
-            const options = [];
-            const liMatches = block.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi);
-            for (const li of liMatches) {
-                options.push(li[1].replace(/^[A-Da-d]\)\s*/, '').trim());
+
+        const dataMatch = htmlContent.match(
+            /const\s+questions\s*=\s*\[([\s\S]*?)\]\s*;/
+        );
+
+        if (dataMatch) {
+            const objectBlocks =
+                dataMatch[1].match(/\{[\s\S]*?\}/g) || [];
+
+            function readString(block, key) {
+                const re = new RegExp(
+                    "\\b" + key +
+                    "\\s*:\\s*(\"(?:\\\\.|[^\"\\\\])*\"|'(?:\\\\.|[^'\\\\])*')"
+                );
+                const match = block.match(re);
+
+                if (!match) return "";
+
+                try {
+                    if (match[1].startsWith('"')) {
+                        return JSON.parse(match[1]);
+                    }
+                    return match[1].slice(1, -1)
+                        .replace(/\\'/g, "'")
+                        .replace(/\\\\/g, "\\");
+                } catch {
+                    return "";
+                }
             }
 
-            if (qMatch && options.length >= 2) {
-                let correctAns = 'A';
-                if (aMatch) {
-                    const ansText = aMatch[1].toUpperCase();
-                    if (ansText.includes('B')) correctAns = 'B';
-                    else if (ansText.includes('C')) correctAns = 'C';
-                    else if (ansText.includes('D')) correctAns = 'D';
+            for (const block of objectBlocks) {
+                const question = readString(block, "question");
+                const explanation = readString(block, "explanation");
+
+                const optionsMatch = block.match(
+                    /\boptions\s*:\s*\[([\s\S]*?)\]/
+                );
+
+                if (!question.trim() || !optionsMatch) continue;
+
+                const optionMatches = optionsMatch[1].match(
+                    /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g
+                ) || [];
+
+                const options = optionMatches.map(value => {
+                    try {
+                        return value.startsWith('"')
+                            ? JSON.parse(value)
+                            : value.slice(1, -1);
+                    } catch {
+                        return "";
+                    }
+                });
+
+                const answerMatch = block.match(
+                    /\banswer\s*:\s*(\d+|['"][ABCD]['"])/
+                );
+
+                if (options.length !== 4 || !answerMatch) continue;
+
+                let answer = answerMatch[1];
+
+                if (/^\d+$/.test(answer)) {
+                    const index = Number(answer);
+                    if (index < 0 || index > 3) continue;
+                    answer = "ABCD"[index];
+                } else {
+                    answer = answer.replace(/['"]/g, "").toUpperCase();
                 }
+
+                if (!"ABCD".includes(answer) || answer.length !== 1) {
+                    continue;
+                }
+
                 questions.push({
-                    question: qMatch[1].replace(/<[^>]*>/g, '').trim(),
-                    option_a: options[0] || 'विकल्प A',
-                    option_b: options[1] || 'विकल्प B',
-                    option_c: options[2] || 'विकल्प C',
-                    option_d: options[3] || 'विकल्प D',
-                    correct_answer: correctAns,
-                    explanation: eMatch ? eMatch[1].replace(/<[^>]*>/g, '').trim() : ''
+                    question: question.replace(/<br\s*\/?>/gi, "\n"),
+                    option_a: options[0],
+                    option_b: options[1],
+                    option_c: options[2],
+                    option_d: options[3],
+                    correct_answer: answer,
+                    explanation: explanation.replace(/<br\s*\/?>/gi, "\n")
                 });
             }
+        }
+
         });
 
         // Do not create fake questions when import fails
