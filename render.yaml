@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: test-with-ankita
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        value: admin123
+      - key: SESSION_SECRET
+        generateValue: true

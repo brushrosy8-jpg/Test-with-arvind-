@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>एडमिन डैशबोर्ड - Test with Ankita</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col">
+    <header class="bg-slate-900 text-white shadow">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold">🛠️ Test with Ankita एडमिन पैनल</h1>
+            <div class="space-x-3">
+                <a href="/" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-sm">वेबसाइट देखें</a>
+                <button onclick="adminLogout()" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-sm">लॉग आउट</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 w-full flex-grow space-y-6">
+        <!-- Stats -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-white p-6 rounded-xl shadow border">
+                <h3 class="text-gray-500 text-sm font-medium">कुल रजिस्टर्ड छात्र</h3>
+                <p id="stat-students" class="text-3xl font-bold text-indigo-600 mt-2">0</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow border">
+                <h3 class="text-gray-500 text-sm font-medium">कुल प्रकाशित टेस्ट</h3>
+                <p id="stat-tests" class="text-3xl font-bold text-emerald-600 mt-2">0</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow border">
+                <h3 class="text-gray-500 text-sm font-medium">कुल सबमिशन</h3>
+                <p id="stat-subs" class="text-3xl font-bold text-amber-600 mt-2">0</p>
+            </div>
+        </div>
+
+        <!-- HTML Test Upload & Importer -->
+        <div class="bg-white p-6 rounded-xl shadow border space-y-4">
+            <h2 class="text-lg font-bold text-slate-800">📄 HTML टेस्ट अपलोड और इम्पोर्ट (Highest Priority)</h2>
+            <p class="text-xs text-gray-500">आप HTML फ़ाइल अपलोड कर सकते हैं। सिस्टम प्रश्नों को पार्स करके नीचे एडिटर में दिखाएगा ताकि आप जाँच और एडिट कर सकें।</p>
+            <form id="upload-html-form" onsubmit="uploadHtmlTest(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">HTML फ़ाइल चुनें</label>
+                    <input type="file" id="html-file-input" accept=".html,.htm" required class="w-full text-sm border rounded-lg p-1">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">विषय (Subject)</label>
+                    <select id="html-subject" class="w-full px-3 py-2 border rounded-lg text-sm">
+                        <option value="गणित">गणित (Maths)</option>
+                        <option value="रीजनिंग">रीजनिंग (Reasoning)</option>
+                        <option value="हिंदी">हिंदी (Hindi)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">टेस्ट शीर्षक (Title)</label>
+                    <input type="text" id="html-title" placeholder="मॉक टेस्ट 1" required class="w-full px-3 py-2 border rounded-lg text-sm">
+                </div>
+                <div>
+                    <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow text-sm">इम्पोर्ट और एडिट करें</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Question Editor & Draft Management Section -->
+        <div id="editor-section" class="hidden bg-white p-6 rounded-xl shadow border space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h2 id="editor-title" class="text-lg font-bold text-slate-800">✍️ प्रश्न एडिटर (Draft Test)</h2>
+                <div class="space-x-2">
+                    <button onclick="saveDraftTest()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm">Save Draft</button>
+                    <button onclick="previewTest()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm">Preview Test</button>
+                    <button onclick="publishCurrentTest()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold">Publish Test</button>
+                </div>
+            </div>
+            <div id="questions-editor-container" class="space-y-4"></div>
+            <button onclick="addNewQuestionRow()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm">+ नया प्रश्न जोड़ें</button>
+        </div>
+
+        <!-- Tests Management -->
+        <div class="bg-white p-6 rounded-xl shadow border space-y-4">
+            <h2 class="text-lg font-bold text-slate-800">टेस्ट प्रबंधन</h2>
+            <div id="admin-tests-list" class="space-y-4"></div>
+        </div>
+
+        <!-- Results Management & Export -->
+        <div class="bg-white p-6 rounded-xl shadow border space-y-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-bold text-slate-800">छात्र परिणाम (Student Results & CSV Export)</h2>
+                <a href="/api/admin/results/csv" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold shadow">CSV एक्सपोर्ट करें</a>
+            </div>
+            <div id="admin-results-list" class="overflow-x-auto"></div>
+        </div>
+    </main>
+
+    <script>
+        let currentDraftTestId = null;
+
+        async function loadAdminData() {
+            try {
+                const res = await fetch('/api/admin/data');
+                if(!res.ok) { window.location.href = '/admin-login.html'; return; }
+                const data = await res.json();
+                document.getElementById('stat-students').textContent = data.studentCount;
+                document.getElementById('stat-tests').textContent = data.tests.length;
+                document.getElementById('stat-subs').textContent = data.results.length;
+
+                // Render Tests List
+                const testsList = document.getElementById('admin-tests-list');
+                testsList.innerHTML = data.tests.map(t => `
+                    <div class="p-4 border rounded-xl bg-slate-50 flex justify-between items-center">
+                        <div>
+                            <h3 class="font-bold text-gray-800">${t.title} <span class="text-xs px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded ml-2">${t.subject}</span></h3>
+                            <p class="text-xs text-gray-500">अवधि: ${t.duration} मिनट | अंक: +${t.marks_correct}/-${t.marks_incorrect} | स्थिति: ${t.published ? 'प्रकाशित (Published)' : 'ड्राफ्ट (Draft)'}</p>
+                        </div>
+                        <div class="space-x-2">
+                            <button onclick="editTest(${t.id})" class="px-3 py-1 bg-blue-600 text-white rounded text-xs">एडिट करें</button>
+                            <button onclick="togglePublish(${t.id}, ${t.published})" class="px-3 py-1 bg-${t.published ? 'amber' : 'emerald'}-600 text-white rounded text-xs">${t.published ? 'अनपब्लिश करें' : 'पब्लिश करें'}</button>
+                            <button onclick="deleteTest(${t.id})" class="px-3 py-1 bg-red-600 text-white rounded text-xs">डिलीट</button>
+                        </div>
+                    </div>
+                `).join('') || '<p class="text-gray-500 text-sm">कोई टेस्ट उपलब्ध नहीं है।</p>';
+
+                // Render Results
+                const resList = document.getElementById('admin-results-list');
+                resList.innerHTML = `
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-gray-100 border-b">
+                                <th class="p-2">छात्र नाम</th>
+                                <th class="p-2">टेस्ट ID</th>
+                                <th class="p-2">विषय</th>
+                                <th class="p-2">स्कोर</th>
+                                <th class="p-2">सही / गलत</th>
+                                <th class="p-2">दिनांक</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.results.map(r => `
+                                <tr class="border-b">
+                                    <td class="p-2 font-medium">${r.student_name}</td>
+                                    <td class="p-2">${r.test_id}</td>
+                                    <td class="p-2">${r.subject}</td>
+                                    <td class="p-2 text-indigo-600 font-bold">${r.score}</td>
+                                    <td class="p-2">${r.correct_count} / ${r.incorrect_count}</td>
+                                    <td class="p-2 text-gray-500">${new Date(r.created_at).toLocaleString()}</td>
+                                </tr>
+                            `).join('') || '<tr><td colspan="6" class="p-4 text-center text-gray-500">कोई परिणाम उपलब्ध नहीं है।</td></tr>'}
+                        </tbody>
+                    </table>
+                `;
+            } catch(e) { console.error(e); }
+        }
+
+        async function uploadHtmlTest(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('html-file-input');
+            const subject = document.getElementById('html-subject').value;
+            const title = document.getElementById('html-title').value;
+
+            const formData = new FormData();
+            formData.append('htmlFile', fileInput.files[0]);
+            formData.append('subject', subject);
+            formData.append('title', title);
+
+            try {
+                const res = await fetch('/api/admin/upload-html', { method: 'POST', body: formData });
+                const data = await res.json();
+                if(res.ok) {
+                    currentDraftTestId = data.testId;
+                    alert('HTML फ़ाइल सफलतापूर्वक पार्स और इम्पोर्ट की गई! अब आप नीचे एडिटर में प्रश्नों की जाँच कर सकते हैं।');
+                    loadEditorForTest(data.testId, title);
+                    fileInput.value = '';
+                } else {
+                    alert(data.error || 'इम्पोर्ट विफल');
+                }
+            } catch(err) { alert('अपलोड त्रुटि'); }
+        }
+
+        async function loadEditorForTest(testId, title) {
+            currentDraftTestId = testId;
+            document.getElementById('editor-section').classList.remove('hidden');
+            document.getElementById('editor-title').textContent = `✍️ प्रश्न एडिटर: ${title}`;
+            const res = await fetch(`/api/admin/tests/${testId}/questions`);
+            const questions = await res.json();
+            renderQuestionsEditor(questions);
+            window.scrollTo({ top: document.getElementById('editor-section').offsetTop, behavior: 'smooth' });
+        }
+
+        function renderQuestionsEditor(questions) {
+            const container = document.getElementById('questions-editor-container');
+            container.innerHTML = questions.map((q, idx) => `
+                <div class="p-4 border rounded-xl bg-slate-50 space-y-3 question-row" data-qid="${q.id}">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-indigo-600">प्रश्न Q${idx + 1}</span>
+                        <button onclick="deleteQuestion(${q.id})" class="text-red-600 hover:text-red-800 text-xs font-semibold">हटाएं</button>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600">प्रश्न टेक्स्ट</label>
+                        <input type="text" class="q-text w-full px-3 py-1.5 border rounded text-sm" value="${q.question}">
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div><input type="text" class="q-a w-full px-2 py-1 border rounded text-sm" value="${q.option_a}" placeholder="विकल्प A"></div>
+                        <div><input type="text" class="q-b w-full px-2 py-1 border rounded text-sm" value="${q.option_b}" placeholder="विकल्प B"></div>
+                        <div><input type="text" class="q-c w-full px-2 py-1 border rounded text-sm" value="${q.option_c}" placeholder="विकल्प C"></div>
+                        <div><input type="text" class="q-d w-full px-2 py-1 border rounded text-sm" value="${q.option_d}" placeholder="विकल्प D"></div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600">सही उत्तर</label>
+                            <select class="q-correct w-full px-2 py-1 border rounded text-sm">
+                                <option value="A" ${q.correct_answer==='A'?'selected':''}>A</option>
+                                <option value="B" ${q.correct_answer==='B'?'selected':''}>B</option>
+                                <option value="C" ${q.correct_answer==='C'?'selected':''}>C</option>
+                                <option value="D" ${q.correct_answer==='D'?'selected':''}>D</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600">स्पष्टीकरण (Solution)</label>
+                            <input type="text" class="q-expl w-full px-2 py-1 border rounded text-sm" value="${q.explanation || ''}">
+                        </div>
+                    </div>
+                </div>
+            `).join('') || '<p class="text-gray-500 text-sm">कोई प्रश्न नहीं है।</p>';
+        }
+
+        async function saveDraftTest() {
+            if(!currentDraftTestId) return;
+            const rows = document.querySelectorAll('.question-row');
+            const questions = [];
+            rows.forEach(r => {
+                questions.push({
+                    id: r.dataset.qid,
+                    question: r.querySelector('.q-text').value,
+                    option_a: r.querySelector('.q-a').value,
+                    option_b: r.querySelector('.q-b').value,
+                    option_c: r.querySelector('.q-c').value,
+                    option_d: r.querySelector('.q-d').value,
+                    correct_answer: r.querySelector('.q-correct').value,
+                    explanation: r.querySelector('.q-expl').value
+                });
+            });
+
+            await fetch(`/api/admin/tests/${currentDraftTestId}/questions`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ questions })
+            });
+            alert('Draft सुरक्षित कर लिया गया है!');
+            loadAdminData();
+        }
+
+        async function publishCurrentTest() {
+            await saveDraftTest();
+            await fetch(`/api/admin/tests/${currentDraftTestId}/publish`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ published: true })
+            });
+            alert('टेस्ट सफलतापूर्वक पब्लिश कर दिया गया है!');
+            document.getElementById('editor-section').classList.add('hidden');
+            loadAdminData();
+        }
+
+        function previewTest() {
+            alert('प्रिव्यू: यह टेस्ट पब्लिश होने के बाद छात्रों के डैशबोर्ड में दिखाई देगा।');
+        }
+
+        async function editTest(id) {
+            const res = await fetch(`/api/admin/data`);
+            const data = await res.json();
+            const t = data.tests.find(x => x.id === id);
+            if(t) loadEditorForTest(t.id, t.title);
+        }
+
+        async function togglePublish(id, current) {
+            await fetch(`/api/admin/tests/${id}/publish`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ published: !current })
+            });
+            loadAdminData();
+        }
+
+        async function deleteTest(id) {
+            if(confirm('क्या आप वाकई इस टेस्ट को डिलीट करना चाहते हैं?')) {
+                await fetch(`/api/admin/tests/${id}`, { method: 'DELETE' });
+                loadAdminData();
+            }
+        }
+
+        async function adminLogout() {
+            await fetch('/api/admin/logout', { method: 'POST' });
+            window.location.href = '/admin-login.html';
+        }
+
+        loadAdminData();
+    </script>
+</body>
+</html>

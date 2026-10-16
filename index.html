@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test with Ankita</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
+    <header class="bg-indigo-600 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <span class="text-2xl">📚</span>
+                <h1 class="text-xl font-bold tracking-wide">Test with Ankita</h1>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button id="lang-btn" onclick="toggleLanguage()" class="px-3 py-1 bg-indigo-700 hover:bg-indigo-800 rounded text-sm font-medium">English / हिंदी</button>
+                <div id="auth-nav" class="flex items-center space-x-2"></div>
+            </div>
+        </div>
+    </header>
+    <main class="max-w-7xl mx-auto px-4 py-6 w-full flex-grow">
+        <div id="app-content"></div>
+    </main>
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-sm text-slate-500">
+        <p>Test with Ankita &copy; 2026 — निःशुल्क ऑनलाइन परीक्षा प्लेटफार्म | <a href="/admin-login.html" class="text-indigo-600 hover:underline">एडमिन लॉगिन</a></p>
+    </footer>
+    <script src="/app.js"></script>
+</body>
+</html>
