@@ -299,6 +299,75 @@ app.get('/api/my-results', requireStudent, (req, res) => {
     });
 });
 
+app.get('/api/my-results/:id/review', requireStudent, (req, res) => {
+    const resultId = Number(req.params.id);
+    const studentId = req.session.studentId;
+
+    db.get(
+        `SELECT * FROM results WHERE id = ? AND student_id = ?`,
+        [resultId, studentId],
+        (err, result) => {
+            if (err) {
+                return res.status(500).json({ error: 'DB error' });
+            }
+            if (!result) {
+                return res.status(404).json({
+                    error: 'रिजल्ट नहीं मिला।'
+                });
+            }
+
+            db.get(
+                `SELECT review_json FROM result_reviews WHERE result_id = ?`,
+                [resultId],
+                (reviewErr, saved) => {
+                    if (reviewErr) {
+                        return res.status(500).json({ error: 'DB error' });
+                    }
+
+                    if (saved) {
+                        return res.json({
+                            ...result,
+                            review: JSON.parse(saved.review_json)
+                        });
+                    }
+
+                    // पुराने attempts: सही उत्तर और explanation दिखाएँ।
+                    // पहले दिए गए उत्तर उपलब्ध नहीं होंगे, यदि वे सेव नहीं हुए थे।
+                    db.all(
+                        `SELECT question, option_a, option_b, option_c,
+                                option_d, correct_answer, explanation
+                         FROM questions WHERE test_id = ?`,
+                        [result.test_id],
+                        (qErr, questions) => {
+                            if (qErr) {
+                                return res.status(500).json({
+                                    error: 'पेपर लोड नहीं हुआ।'
+                                });
+                            }
+
+                            const review = questions.map(q => ({
+                                question: q.question,
+                                options: {
+                                    A: q.option_a,
+                                    B: q.option_b,
+                                    C: q.option_c,
+                                    D: q.option_d
+                                },
+                                user_answer: null,
+                                correct_answer: q.correct_answer,
+                                is_correct: false,
+                                explanation: q.explanation || ''
+                            }));
+
+                            res.json({ ...result, review });
+                        }
+                    );
+                }
+            );
+        }
+    );
+});
+
 // Leaderboard
 app.get('/api/leaderboard', requireStudent, (req, res) => {
     const type = req.query.type || 'overall';
