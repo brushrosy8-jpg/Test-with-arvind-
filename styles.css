@@ -2,42 +2,38 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 body { font-family: 'Poppins', sans-serif; }
 
-/* Cute floating hearts everywhere */
-body::before,
-body::after {
+
+<style>
+.ankita-heart {
   position: fixed;
-  bottom: -50px;
+  left: var(--x);
+  bottom: -40px;
+  z-index: 9998;
   pointer-events: none;
-  z-index: 9999;
-  color: #f4a6c8;
-  animation: pinkHearts 8s linear infinite;
+  font-size: var(--size);
+  animation: heartFloat var(--speed) linear forwards;
 }
-
-body::before {
-  content: "♡  ♥  ♡  💗  ♡  ♥  ♡  💕  ♡  ♥  ♡  💗  ♡  ♥  ♡";
-  left: 3%;
-  width: 94%;
-  font-size: 19px;
-  letter-spacing: 9px;
+@keyframes heartFloat {
+  0% { transform: translateY(0) rotate(0); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translateY(-115vh) rotate(35deg); opacity: 0; }
 }
-
-body::after {
-  content: "💗  ♡  💕  ♡  ♥  ♡  💗  ♡  ♥  ♡  💕  ♡";
-  left: 10%;
-  width: 85%;
-  font-size: 15px;
-  letter-spacing: 13px;
-  animation-delay: -4s;
-}
-
-@keyframes pinkHearts {
-  0% {
-    transform: translateY(0);
-    opacity: 0;
-  }
-  15% { opacity: 0.8; }
-  100% {
-    transform: translateY(-115vh);
-    opacity: 0;
-  }
-}
+</style>
+<script>
+(() => {
+  const emojis = ['💕','😘','💖','💓','💞','🩷','❣️','💘','💜','❤️','💗','💝'];
+  setInterval(() => {
+    if (document.hidden) return;
+    for (let i = 0; i < 2; i++) {
+      const h = document.createElement('span');
+      h.className = 'ankita-heart';
+      h.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      h.style.setProperty('--x', Math.random() * 96 + 'vw');
+      h.style.setProperty('--size', (14 + Math.random() * 22) + 'px');
+      h.style.setProperty('--speed', (5 + Math.random() * 6) + 's');
+      document.body.appendChild(h);
+      h.addEventListener('animationend', () => h.remove());
+    }
+  }, 260);
+})();
+</script>
