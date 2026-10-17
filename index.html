@@ -26,6 +26,49 @@
     <footer class="bg-white border-t border-slate-200 py-4 text-center text-sm text-slate-500">
         <p>Test with Ankita &copy; 2026 — निःशुल्क ऑनलाइन परीक्षा प्लेटफार्म | <a href="/admin-login.html" class="text-indigo-600 hover:underline">एडमिन लॉगिन</a></p>
     </footer>
+    <script>
+(() => {
+  const emojis = [
+    '💕','💗','💖','💘','💝','💞','💓','🩷',
+    '❤️','😘','🥰','😚','💌','🫶','❣️',
+    '💟','❤️‍🔥','💜','💛','💖','💕','😘','🩷',
+    '💞','💗','😘','💓','💝'
+  ];
+
+  function createLoveEmoji() {
+    if (document.hidden) return;
+
+    const heart = document.createElement('span');
+    heart.className = 'ankita-heart';
+
+    heart.textContent =
+      emojis[Math.floor(Math.random() * emojis.length)];
+
+    heart.style.setProperty(
+      '--x',
+      Math.random() * 96 + 'vw'
+    );
+
+    heart.style.setProperty(
+      '--size',
+      (16 + Math.random() * 22) + 'px'
+    );
+
+    heart.style.setProperty(
+      '--speed',
+      (6 + Math.random() * 6) + 's'
+    );
+
+    document.body.appendChild(heart);
+
+    heart.addEventListener('animationend', () => {
+      heart.remove();
+    });
+  }
+
+  setInterval(createLoveEmoji, 350);
+})();
+</script>
     <script src="/app.js"></script>
 </body>
 </html>
