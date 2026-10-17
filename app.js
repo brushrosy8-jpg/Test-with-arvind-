@@ -239,33 +239,89 @@ function renderTests(serverTests, htmlTests, subject) {
     grid.innerHTML = htmlOutput || '<p class="text-slate-500 col-span-full text-center py-10">कोई टेस्ट नहीं मिला।</p>';
 }
 
+
 async function loadResultsView() {
     const container = document.getElementById('tab-content');
-    container.innerHTML = '<p class="text-gray-500">परिणाम लोड हो रहे हैं...</p>';
+    container.innerHTML = '<p>परिणाम लोड हो रहे हैं...</p>';
+
     try {
         const res = await fetch('/api/my-results');
+        if (!res.ok) throw new Error('Results load failed');
+
         const results = await res.json();
+
         container.innerHTML = `
             <div class="bg-white rounded-2xl shadow-md p-6">
-                <h3 class="text-lg font-bold text-slate-800 mb-4">मेरे पिछले टेस्ट परिणाम</h3>
+                <h3 class="text-lg font-bold mb-4">
+                    मेरे पिछले टेस्ट परिणाम
+                </h3>
+
                 <div class="space-y-4">
                     ${results.map(r => `
-                        <div class="p-4 border rounded-xl bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-2">
-                            <div>
-                                <h4 class="font-bold text-slate-800">टेस्ट ID: ${r.test_id} <span class="text-xs px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded ml-2">${r.subject}</span></h4>
-                                <p class="text-xs text-gray-500">${new Date(r.created_at).toLocaleString()}</p>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-xl font-bold text-indigo-600">${r.score} अंक (${r.percentage}%)</p>
-                                <p class="text-xs text-gray-500">सही: ${r.correct_count} | गलत: ${r.incorrect_count} | अनुत्तरित: ${r.unanswered_count}</p>
-                            </div>
-                        </div>
-                    `).join('') || '<p class="text-slate-500">आपने अभी तक कोई टेस्ट नहीं दिया है।</p>'}
+                        <button
+                            type="button"
+                            onclick="openSavedReview(${r.id})"
+                            class="w-full text-left p-4 border rounded-xl
+                                   bg-slate-50 hover:bg-indigo-50">
+                            <h4 class="font-bold">
+                                टेस्ट ID: ${r.test_id} — ${r.subject}
+                            </h4>
+                            <p class="text-xs text-gray-500">
+                                ${new Date(r.created_at).toLocaleString()}
+                            </p>
+                            <p class="text-xl font-bold text-indigo-600">
+                                ${r.score} अंक (${r.percentage}%)
+                            </p>
+                            <p class="text-xs text-gray-500">
+                                सही: ${r.correct_count} |
+                                गलत: ${r.incorrect_count} |
+                                अनुत्तरित: ${r.unanswered_count}
+                            </p>
+                            <p class="mt-2 text-indigo-700 font-semibold">
+                                📘 पूरा पेपर और समाधान खोलें →
+                            </p>
+                        </button>
+                    `).join('') ||
+                    '<p>आपने अभी तक कोई टेस्ट नहीं दिया है।</p>'}
                 </div>
             </div>
         `;
-    } catch(e) { container.innerHTML = '<p class="text-red-500">परिणाम लोड करने में विफल।</p>'; }
+    } catch (e) {
+        container.innerHTML =
+            '<p class="text-red-500">परिणाम लोड नहीं हुए। दोबारा कोशिश करें।</p>';
+    }
 }
+
+async function openSavedReview(resultId) {
+    const container = document.getElementById('tab-content');
+    container.innerHTML = '<p>पेपर और समाधान लोड हो रहे हैं...</p>';
+
+    try {
+        const res = await fetch(
+            `/api/my-results/${resultId}/review`
+        );
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.error || 'पेपर लोड नहीं हुआ');
+        }
+
+        document.getElementById('app-content').innerHTML =
+            '<div id="saved-review-screen"></div>';
+
+        renderResultScreen(data);
+    } catch (e) {
+        container.innerHTML = `
+            <p class="text-red-600">
+                ${e.message || 'पेपर लोड नहीं हुआ।'}
+            </p>
+            <button onclick="loadResultsView()">
+                वापस जाएँ
+            </button>
+        `;
+    }
+}
+
 
 async function loadLeaderboardView(type) {
     const container = document.getElementById('tab-content');
