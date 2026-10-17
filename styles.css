@@ -1,43 +1,150 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
-body {
-  font-family: 'Poppins', sans-serif;
+:root {
+  --pink: #f08ac7;
+  --deep-pink: #d85aa9;
+  --light-pink: #fff0f8;
+  --purple: #8054a5;
+  --border-pink: #f4c9e5;
 }
 
-/* 💕 Test with Ankita — Floating Hearts 💕 */
+body {
+  font-family: 'Poppins', sans-serif !important;
+  background: linear-gradient(180deg, #ffe7f5 0%, #fff5fa 45%, #fff0f7 100%) !important;
+  color: #43315f !important;
+}
 
+/* Header */
+header {
+  background: linear-gradient(110deg, #f9c8e5, #e9b5e5, #ffdcec) !important;
+  color: #593568 !important;
+  border-bottom: 2px solid #f5c4e2;
+  box-shadow: 0 5px 18px #e8a5d533 !important;
+}
+
+/* Main cards */
+#app-content .bg-white,
+#tab-content .bg-white {
+  background: rgba(255, 248, 253, 0.94) !important;
+  border-color: var(--border-pink) !important;
+  box-shadow: 0 5px 18px #df8bc522 !important;
+  border-radius: 24px !important;
+}
+
+/* Buttons */
+button {
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+button:active {
+  transform: scale(.97);
+}
+
+#app-content button.bg-indigo-600,
+#app-content button.bg-indigo-700,
+#app-content button.bg-red-600 {
+  background: linear-gradient(110deg, #ed8bc8, #c65ab0) !important;
+  color: white !important;
+  border: 1px solid #edb1dc !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 10px #d76bb433;
+}
+
+/* Search and input fields */
+input,
+textarea,
+select {
+  border-color: #efc7e3 !important;
+  border-radius: 15px !important;
+  background-color: #fff9fd !important;
+  color: #49365f !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid #e8a1d2 !important;
+}
+
+/* Test cards */
+#tests-grid > div {
+  background: linear-gradient(145deg, #fffafd, #fff0f8) !important;
+  border: 1px solid #f1c6e3 !important;
+  border-radius: 23px !important;
+  box-shadow: 0 6px 18px #e6a0ce24 !important;
+}
+
+/* Test question and answer boxes */
+#app-content label {
+  border-color: #efc9e4 !important;
+  border-radius: 16px !important;
+}
+
+#app-content label:hover {
+  background: #fff0f8 !important;
+}
+
+#app-content h2,
+#app-content h3,
+#app-content h4 {
+  color: #53386f;
+}
+
+/* Floating hearts and kiss emojis */
 .ankita-heart {
   position: fixed;
   left: var(--x);
-  bottom: -60px;
+  bottom: -55px;
   z-index: 9998;
   pointer-events: none;
   user-select: none;
   font-size: var(--size);
   line-height: 1;
-  opacity: 0;
-  animation: ankitaHeartFloat var(--speed) linear forwards;
-  filter: drop-shadow(0 2px 5px rgba(255, 70, 150, 0.25));
+  filter: drop-shadow(0 3px 5px #ec76bd55);
+  animation: ankitaFloat var(--speed) linear forwards;
   will-change: transform, opacity;
 }
 
-@keyframes ankitaHeartFloat {
+@keyframes ankitaFloat {
   0% {
-    transform: translateY(0) rotate(-15deg) scale(0.7);
+    transform: translateY(0) rotate(-15deg) scale(.7);
     opacity: 0;
   }
-
-  10% {
-    opacity: 1;
+  12% {
+    opacity: .95;
   }
-
-  50% {
-    transform: translateY(-55vh) rotate(15deg) scale(1.1);
-    opacity: 0.95;
+  55% {
+    transform: translateY(-60vh) rotate(15deg) scale(1.1);
+    opacity: .9;
   }
-
   100% {
-    transform: translateY(-115vh) rotate(-20deg) scale(0.8);
+    transform: translateY(-115vh) rotate(-20deg) scale(.8);
     opacity: 0;
+  }
+}
+
+/* Bottom navigation, if present */
+nav {
+  border-color: #f1c5e2 !important;
+}
+
+/* Mobile adjustments */
+@media (max-width: 600px) {
+  #app-content {
+    padding-bottom: 18px;
+  }
+
+  #app-content .p-6 {
+    padding: 16px !important;
+  }
+
+  #tests-grid {
+    gap: 14px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ankita-heart {
+    animation-duration: 12s;
   }
 }
