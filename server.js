@@ -290,7 +290,10 @@ db.run(
         });
     }
 );
-
+            });
+        });
+    });
+});
 app.get('/api/my-results', requireStudent, (req, res) => {
     const studentId = req.session.studentId;
     db.all(`SELECT * FROM results WHERE student_id = ? ORDER BY created_at DESC`, [studentId], (err, rows) => {
