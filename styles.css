@@ -148,3 +148,94 @@ nav {
     animation-duration: 12s;
   }
 }
+
+
+/* Ankita's cute home page */
+.ankita-welcome {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 160px;
+  gap: 12px;
+  align-items: center;
+  padding: 24px 20px;
+  border: 1px solid #f4c9e5;
+  border-radius: 28px;
+  background: linear-gradient(135deg, #fffafd, #ffe4f3, #fff0f8);
+  box-shadow: 0 8px 24px #df8bc533;
+}
+
+.ankita-welcome-text h2 {
+  font-size: clamp(24px, 5vw, 36px);
+  font-weight: 800;
+  line-height: 1.35;
+  color: #49265f !important;
+  margin-bottom: 14px;
+}
+
+.ankita-welcome-text h3 {
+  font-size: 19px;
+  font-weight: 700;
+  color: #8c4388 !important;
+}
+
+.ankita-welcome-text p {
+  margin-top: 8px;
+  color: #765b85;
+  font-size: 14px;
+}
+
+.ankita-welcome-gif {
+  width: 160px;
+  height: 175px;
+  object-fit: contain;
+  justify-self: center;
+}
+
+.ankita-tabs {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 10px;
+}
+
+.ankita-tabs button {
+  padding: 10px 14px;
+  border: 1px solid #f1c6e3;
+  border-radius: 16px;
+  background: #f9e3f5;
+  color: #75427e;
+  font-weight: 600;
+}
+
+.ankita-tabs button:first-child {
+  background: linear-gradient(110deg, #ed8bc8, #c65ab0);
+  color: white;
+}
+
+@media (max-width: 600px) {
+  .ankita-welcome {
+    grid-template-columns: 1fr 105px;
+    padding: 18px 14px;
+    gap: 6px;
+  }
+
+  .ankita-welcome-gif {
+    width: 105px;
+    height: 135px;
+  }
+
+  .ankita-welcome-text h2 {
+    font-size: 24px;
+  }
+
+  .ankita-welcome-text h3 {
+    font-size: 16px;
+  }
+
+  .ankita-tabs button {
+    padding: 9px 11px;
+    font-size: 12px;
+  }
+}
