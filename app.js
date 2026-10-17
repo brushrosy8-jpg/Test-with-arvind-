@@ -89,11 +89,21 @@ async function renderApp() {
         navDiv.innerHTML = '';
         contentDiv.innerHTML = `
             <div class="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-8 mt-10">
-                <div class="text-center mb-6">
-                    <span class="text-4xl">📚</span>
-                    <h2 class="text-2xl font-bold text-slate-800 mt-2">Test with Ankita</h2>
-                    <p class="text-slate-500 text-sm">ऑनलाइन परीक्षा एवं प्रैक्टिस पोर्टल</p>
-                </div>
+                
+<div class="text-center mb-6">
+    <img
+        src="/gifs/header-teddygif.GIF"
+        alt="प्यारा टेडी"
+        class="mx-auto mb-3 w-32 h-32 object-contain"
+    >
+    <h2 class="text-2xl font-bold text-pink-600 mt-2">
+        Test with Ankita
+    </h2>
+    <p class="text-slate-500 text-sm">
+        🩷 ऑनलाइन परीक्षा एवं प्रैक्टिस पोर्टल 🩷
+    </p>
+</div>
+
                 <div class="flex border-b mb-6">
                     <button onclick="switchAuthMode('login')" id="auth-tab-login" class="flex-1 pb-2 font-semibold text-indigo-600 border-b-2 border-indigo-600">${t.loginTab}</button>
                     <button onclick="switchAuthMode('register')" id="auth-tab-register" class="flex-1 pb-2 font-semibold text-gray-400">${t.registerTab}</button>
@@ -426,7 +436,18 @@ function renderTestScreen() {
     contentDiv.innerHTML = `
         <div class="bg-white rounded-2xl shadow-xl p-6 space-y-6 max-w-4xl mx-auto">
             <div class="flex justify-between items-center border-b pb-4">
-                <h2 class="text-xl font-bold text-slate-800">${activeTest.test.title}</h2>
+                
+<div class="flex items-center gap-2">
+    <img
+        src="/gifs/test-buddygif.GIF"
+        alt="टेस्ट बडी"
+        class="w-12 h-12 object-contain"
+    >
+    <h2 class="text-xl font-bold text-pink-600">
+        ${activeTest.test.title}
+    </h2>
+</div>
+
                 <div class="flex items-center space-x-4">
                     <span class="px-3 py-1 bg-amber-50 text-amber-700 rounded-lg font-bold text-sm" id="test-timer">${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}</span>
                     <button onclick="confirmSubmitTest()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold">टेस्ट सबमिट करें</button>
