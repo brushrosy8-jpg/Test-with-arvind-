@@ -68,21 +68,31 @@ async function renderApp() {
             <span class="text-sm font-medium">👤 ${currentUser.name}</span>
             <button onclick="logout()" class="px-3 py-1 bg-indigo-700 hover:bg-indigo-800 rounded text-sm">${t.logout}</button>
         `;
+        
         contentDiv.innerHTML = `
-            <div class="space-y-6">
-                <div class="bg-white rounded-2xl shadow-md p-6 flex flex-col sm:flex-row justify-between items-center">
-                    <div>
-                        <h2 class="text-2xl font-bold text-slate-800">${t.welcome}, ${currentUser.name}!</h2>
-                        <p class="text-slate-500 text-sm mt-1">अपने मॉक टेस्ट चुनें और परीक्षा की तैयारी शुरू करें।</p>
+            <div class="ankita-home space-y-6">
+                <section class="ankita-welcome">
+                    <div class="ankita-welcome-text">
+                        <h2>मेरी प्यारी teeniiiiii 😚🫂</h2>
+                        <h3>${t.welcome}, ${currentUser.name}!</h3>
+                        <p>अपने गोल सेट करें और परीक्षा की तैयारी शुरू करें। 🩷</p>
                     </div>
-                    <div class="mt-4 sm:mt-0 flex flex-wrap gap-2">
-                        <button onclick="switchTab('tests')" id="tab-tests-btn" class="px-4 py-2 rounded-xl font-medium bg-indigo-600 text-white shadow">${t.allTests}</button>
-                        <button onclick="switchTab('results')" id="tab-results-btn" class="px-4 py-2 rounded-xl font-medium bg-gray-200 text-gray-700">${t.myResults}</button>
-                        <button onclick="switchTab('leaderboard')" id="tab-leaderboard-btn" class="px-4 py-2 rounded-xl font-medium bg-gray-200 text-gray-700">${t.leaderboard}</button>
+                    <img
+                        src="/gifs/welcome-bunnygif.GIF"
+                        alt="Cute bunny and teddy"
+                        class="ankita-welcome-gif"
+                    >
+                    <div class="ankita-tabs">
+                        <button onclick="switchTab('tests')" id="tab-tests-btn">${t.allTests}</button>
+                        <button onclick="switchTab('results')" id="tab-results-btn">${t.myResults} 💗</button>
+                        <button onclick="switchTab('leaderboard')" id="tab-leaderboard-btn">${t.leaderboard}</button>
                     </div>
-                </div>
+                </section>
                 <div id="tab-content"></div>
             </div>
+        `;
+        loadTestsView('all');
+
         `;
         loadTestsView('all');
     } else {
