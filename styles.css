@@ -239,3 +239,59 @@ nav {
     font-size: 12px;
   }
 }
+
+/* Test with Ankita - pink reference theme */
+#app-content > .bg-white.rounded-2xl,
+#app-content > .max-w-4xl {
+  background: linear-gradient(145deg, #fffafd, #ffedf7) !important;
+  border: 1px solid #f2c8e4 !important;
+  border-radius: 26px !important;
+  box-shadow: 0 8px 26px #d769b729 !important;
+}
+
+#app-content #test-timer {
+  background: #fff0f8 !important;
+  color: #8b3d7b !important;
+  border: 1px solid #f2c6e3 !important;
+  border-radius: 14px !important;
+  padding: 10px 14px !important;
+  font-size: 16px !important;
+}
+
+#app-content label {
+  background: #fffafd !important;
+  border: 1px solid #efc9e4 !important;
+  border-radius: 16px !important;
+  padding: 12px 14px !important;
+  margin-bottom: 8px;
+}
+
+#app-content .ankita-welcome {
+  min-height: 210px;
+}
+
+#app-content .ankita-welcome-gif {
+  width: 180px;
+  height: 190px;
+}
+
+#app-content #tests-grid > div {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, #fffafd, #ffedf7) !important;
+  border: 1px solid #f1c6e3 !important;
+  border-radius: 23px !important;
+}
+
+@media (max-width: 600px) {
+  #app-content > .bg-white.rounded-2xl,
+  #app-content > .max-w-4xl {
+    padding: 14px !important;
+    border-radius: 22px !important;
+  }
+
+  #app-content .ankita-welcome-gif {
+    width: 105px;
+    height: 135px;
+  }
+}
