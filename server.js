@@ -55,19 +55,26 @@ db.serialize(() => {
     )`);
 
     db.run(`CREATE TABLE IF NOT EXISTS results (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        student_id INTEGER,
-        student_name TEXT,
-        test_id INTEGER,
-        subject TEXT,
-        score INTEGER,
-        correct_count INTEGER,
-        incorrect_count INTEGER,
-        unanswered_count INTEGER,
-        percentage REAL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(student_id) REFERENCES students(id)
-    )`);
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER,
+    student_name TEXT,
+    test_id INTEGER,
+    subject TEXT,
+    score INTEGER,
+    correct_count INTEGER,
+    incorrect_count INTEGER,
+    unanswered_count INTEGER,
+    percentage REAL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(student_id) REFERENCES students(id)
+)`);
+
+db.run(`CREATE TABLE IF NOT EXISTS result_reviews (
+    result_id INTEGER PRIMARY KEY,
+    review_json TEXT NOT NULL,
+    FOREIGN KEY(result_id) REFERENCES results(id)
+)`);
+
 });
 
 const uploadDir = path.join(__dirname, 'uploads');
