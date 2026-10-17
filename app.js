@@ -93,8 +93,7 @@ async function renderApp() {
         `;
         loadTestsView('all');
 
-        `;
-        loadTestsView('all');
+        
     } else {
         navDiv.innerHTML = '';
         contentDiv.innerHTML = `
