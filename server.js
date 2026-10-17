@@ -254,21 +254,42 @@ app.post('/api/tests/submit', requireStudent, (req, res) => {
                 [studentId, studentName, test_id, test.subject, finalScore, correctCount, incorrectCount, unansweredCount, percentage],
                 function(err) {
                     if (err) console.error(err);
-                    res.json({
-    success: true,
-    score: finalScore,
-    maxScore,
-    percentage,
-    correct_count: correctCount,
-    incorrect_count: incorrectCount,
-    unanswered_count: unansweredCount,
-    review
-});
-                }
-            );
-        });
+                
+
+if (err) {
+    console.error(err);
+    return res.status(500).json({
+        error: 'रिजल्ट सेव नहीं हुआ।'
     });
-});
+}
+
+const resultId = this.lastID;
+
+db.run(
+    `INSERT INTO result_reviews (result_id, review_json)
+     VALUES (?, ?)`,
+    [resultId, JSON.stringify(review)],
+    (saveErr) => {
+        if (saveErr) {
+            console.error(saveErr);
+            return res.status(500).json({
+                error: 'पेपर का समाधान सेव नहीं हुआ।'
+            });
+        }
+
+        res.json({
+            success: true,
+            result_id: resultId,
+            score: finalScore,
+            maxScore,
+            percentage,
+            correct_count: correctCount,
+            incorrect_count: incorrectCount,
+            unanswered_count: unansweredCount,
+            review
+        });
+    }
+);
 
 app.get('/api/my-results', requireStudent, (req, res) => {
     const studentId = req.session.studentId;
