@@ -468,7 +468,8 @@ function renderTestScreen() {
                         <span>प्रश्न ${currentQuestionIndex + 1} / ${totalQ}</span>
                         <span>अंक: +${activeTest.test.marks_correct} / -${activeTest.test.marks_incorrect}</span>
                     </div>
-                    <h3 class="text-lg font-semibold text-slate-800">${q.question}</h3>
+                    <h3 class="text-lg font-semibold text-slate-800"
+    style="white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7;">${q.question.replace(/(कथन\s*2\s*:)/g, '<br><br>$1')}</h3>
                     <div class="space-y-3">
                         ${['A', 'B', 'C', 'D'].map(opt => `
                             <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-indigo-50 transition ${userAnswers[q.id] === opt ? 'border-indigo-600 bg-indigo-50' : 'border-gray-200'}">
